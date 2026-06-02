@@ -7,10 +7,17 @@ import json
 import requests
 from datetime import datetime
 import time
+import sys
+import os
+
+# 添加scripts目录到路径
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+# 导入配置加载模块
+from config_loader import load_config
 
 # 加载配置
-with open('D:/hfut_info_monitor/config/config.json', 'r', encoding='utf-8') as f:
-    CONFIG = json.load(f)
+CONFIG = load_config()
 
 QQ_ACCOUNTS = CONFIG['qq_accounts']
 PUSH_METHOD = CONFIG['push_method']
@@ -100,14 +107,16 @@ def save_to_archive(info):
     保存信息到归档
     :param info: 信息字典
     """
+    from config_loader import get_json_path, get_db_path
+    
     # 方案1：保存到JSON文件
-    with open('D:/hfut_info_monitor/data/hfut_archive.json', 'a', encoding='utf-8') as f:
+    with open(get_json_path(), 'a', encoding='utf-8') as f:
         json.dump(info, f, ensure_ascii=False)
         f.write('\n')
     
     # 方案2：保存到SQLite数据库（可选）
     # import sqlite3
-    # conn = sqlite3.connect('D:/hfut_info_monitor/data/hfut_archive.db')
+    # conn = sqlite3.connect(get_db_path())
     # ...
 
 def monitor_qzone():
