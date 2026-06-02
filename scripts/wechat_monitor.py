@@ -130,7 +130,6 @@ def save_to_archive(info):
     # 方案2：保存到SQLite数据库（可选）
     # import sqlite3
     # conn = sqlite3.connect(get_db_path())
-    # conn = sqlite3.connect('D:/hfut_info_monitor/data/hfut_archive.db')
     # ...
 
 def monitor_wechat():
@@ -187,7 +186,7 @@ if __name__ == '__main__':
     print()
     print("⚠️  注意：需要安装 WechatSogou 库才能实际使用")
     print("   安装命令：")
-    print("   cd D:/hfut_info_monitor")
+    print(f"   cd {os.path.dirname(os.path.dirname(os.path.abspath(__file__)))}")
     print("   git clone https://github.com/Chyroc/WechatSogou.git")
     print("   cd WechatSogou")
     print("   pip install -r requirements.txt")
