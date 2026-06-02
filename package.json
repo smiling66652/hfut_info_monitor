@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "github-download": "^0.5.0",
+    "node-napcat-ts": "^0.4.25",
+    "nodejs-file-downloader": "^4.13.0"
+  }
+}
