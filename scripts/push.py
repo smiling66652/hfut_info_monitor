@@ -10,10 +10,17 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.header import Header
 from datetime import datetime
+import sys
+import os
+
+# 添加scripts目录到路径
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+# 导入配置加载模块
+from config_loader import load_config, get_log_dir
 
 # 加载配置
-with open('D:/hfut_info_monitor/config/config.json', 'r', encoding='utf-8') as f:
-    CONFIG = json.load(f)
+CONFIG = load_config()
 
 # 邮件配置
 SMTP_SERVER = CONFIG['push_method']['smtp_server']
@@ -24,6 +31,19 @@ RECEIVER_EMAIL = CONFIG['push_method']['receiver_email']
 
 # NapCat QQ 配置
 NAPCAT_CONFIG = CONFIG.get('napcat', {})
+
+# 配置日志
+import logging
+LOG_DIR = get_log_dir()
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(os.path.join(LOG_DIR, 'push.log'), encoding='utf-8'),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger('Push')
 
 def send_qq_message(user_id=None, message=""):
     """
