@@ -11,25 +11,32 @@ import sys
 import os
 
 # 添加scripts目录到路径
-sys.path.append(os.path.dirname(__file__))
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # 配置日志
+# 获取项目根目录
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+LOG_DIR = os.path.join(BASE_DIR, 'logs')
+os.makedirs(LOG_DIR, exist_ok=True)
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('D:/hfut_info_monitor/logs/monitor.log', encoding='utf-8'),
+        logging.FileHandler(os.path.join(LOG_DIR, 'monitor.log'), encoding='utf-8'),
         logging.StreamHandler()
     ]
 )
 logger = logging.getLogger('HFUT_Monitor')
 
 # 加载配置
+CONFIG_PATH = os.path.join(BASE_DIR, 'config', 'config.json')
+
 try:
-    with open('D:/hfut_info_monitor/config/config.json', 'r', encoding='utf-8') as f:
+    with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
         CONFIG = json.load(f)
 except FileNotFoundError:
-    print("❌ 配置文件不存在：D:/hfut_info_monitor/config/config.json")
+    print(f"❌ 配置文件不存在：{CONFIG_PATH}")
     print("   请先运行 setup.py 或手动创建配置文件")
     sys.exit(1)
 
@@ -100,7 +107,7 @@ def test_configuration():
     
     # 检查配置文件
     print("📋 配置文件：")
-    print(f"  路径：D:/hfut_info_monitor/config/config.json")
+    print(f"  路径：{CONFIG_PATH}")
     
     # 检查监控目标
     print()
