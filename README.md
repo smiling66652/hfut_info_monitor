@@ -461,6 +461,35 @@ D:\项目整理\01-代码项目\hfut_info_monitor\
 
 ---
 
+## 🎉 更新日志
+
+### v1.1 (2026-06-02) - 代码质量优化
+
+**✨ 代码优化**
+- 修复所有硬编码路径，使用 `config_loader.py` 统一管理
+- 添加 `config_loader.py` 模块（支持相对路径、跨平台）
+- 修复 `main.py` 中的 bug（`__file__` → `__file__`，`levelname` → `levelname`）
+- 所有模块使用统一的日志配置
+
+**📚 社区标准文件**
+- 添加 `CODE_OF_CONDUCT.md`（行为准则）
+- 添加 `CONTRIBUTING.md`（贡献指南）
+- 添加 `SECURITY.md`（安全披露政策）
+- 添加 Issue 模板（bug report、feature request）
+- 添加 Pull Request 模板
+
+**🤖 CI/CD**
+- 添加 GitHub Actions 工作流（`.github/workflows/ci.yml`）
+- 自动运行代码检查（flake8）和单元测试（pytest）
+
+---
+
+### v1.0 (2026-06-01) - 初始版本
+
+🎉 项目发布
+
+---
+
 ## 🙏 致谢
 
 - [go-cqhttp](https://github.com/Mrs4s/go-cqhttp) - QQ机器人框架
