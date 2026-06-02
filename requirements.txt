@@ -1,0 +1,90 @@
+# 合工大信息监控系统 - Python依赖
+
+## 核心依赖
+
+### 网络通信
+requests>=2.28.0
+urllib3>=1.26.0
+
+### 数据处理
+json5>=0.9.0
+PyYAML>=6.0
+python-dateutil>=2.8.0
+
+### 数据库
+sqlite3  # Python内置，无需安装
+
+### 邮件推送
+smtplib  # Python内置，无需安装
+email     # Python内置，无需安装
+
+### 定时任务
+apscheduler>=3.10.0
+
+### 微信公众号爬虫（可选）
+# WechatSogou 需要单独安装
+# git clone https://github.com/Chyroc/WechatSogou.git
+
+### QQ机器人框架（可选）
+# go-cqhttp 需要单独下载
+# https://github.com/Mrs4s/go-cqhttp/releases
+
+### AI分析（可选，需要Y7000P）
+# Ollama Python客户端
+requests>=2.28.0  # 用于调用Ollama API
+
+### 日志
+logging  # Python内置，无需安装
+
+## 安装命令
+
+```bash
+# 基础安装
+pip install requests urllib3 PyYAML python-dateutil apscheduler
+
+# 或使用本文件
+pip install -r requirements.txt
+```
+
+## 可选依赖
+
+### 如果使用WechatSogou（微信公众号爬虫）
+```bash
+cd D:\hfut_info_monitor
+git clone https://github.com/Chyroc/WechatSogou.git
+cd WechatSogou
+pip install -r requirements.txt
+```
+
+### 如果使用go-cqhttp（QQ监控）
+```bash
+cd D:\hfut_info_monitor
+wget https://github.com/Mrs4s/go-cqhttp/releases/download/v1.2.0/go-cqhttp_windows_amd64.exe
+mv go-cqhttp_windows_amd64.exe go-cqhttp.exe
+```
+
+### 如果使用Ollama（本地AI分析）
+```bash
+# 安装Ollama
+# 下载：https://ollama.com/download
+
+# 拉取模型
+ollama pull qwen2:7b
+```
+
+## 验证安装
+
+```python
+import requests
+import yaml
+import json
+import sqlite3
+import smtplib
+from apscheduler.schedulers.blocking import BlockingScheduler
+
+print("✅ 所有依赖已安装")
+```
+
+---
+
+**注意**：部分功能（如WechatSogou、go-cqhttp、Ollama）需要单独安装，请根据实际需求选择。
