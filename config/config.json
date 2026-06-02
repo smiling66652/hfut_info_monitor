@@ -1,0 +1,54 @@
+{
+  "qq_accounts": [
+    "1727559019",
+    "2842943530",
+    "2794573164",
+    "1576711825",
+    "823413788",
+    "3290029079",
+    "3234986841",
+    "2075199041",
+    "3107961334"
+  ],
+  "wechat_accounts": [
+    "合肥工业大学",
+    "合肥工业大学宣城校区",
+    "合肥工业大学宣城校区学生工作",
+    "合肥工业大学教务处"
+  ],
+  "qq_groups": [],
+  "push_method": {
+    "push_method": "qq_email",
+    "smtp_server": "smtp.qq.com",
+    "smtp_port": 465,
+    "sender_email": "1604220682@qq.com",
+    "sender_password": "eqlzngzogzzbgigj",
+    "receiver_email": "2240678683@qq.com"
+  },
+  "napcat": {
+    "enable": true,
+    "api_url": "http://localhost:3001",
+    "token": "Q.pRTPcXxoHKfR2b",
+    "bot_qq": "2240678683",
+    "default_receiver": "1604220682"
+  },
+  "ai_secretary": {
+    "role": "私人信息秘书",
+    "tasks": [
+      "自动过滤垃圾信息",
+      "提取关键信息",
+      "分类归档",
+      "智能推送重要信息",
+      "生成每日摘要"
+    ],
+    "filter_rules": {
+      "garbage_keywords": ["广告", "推广", "兼职", "刷单", "加群", "红包", "扫码"],
+      "important_keywords": ["通知", "重要", "紧急", "截止", "报名", "考试", "成绩", "保研", "考研"]
+    },
+    "push_strategy": {
+      "immediate_push": ["紧急", "重要", "截止"],
+      "daily_digest": true,
+      "digest_time": "20:00"
+    }
+  }
+}
