@@ -6,9 +6,14 @@
 import re
 import json
 from datetime import datetime
+import os
+
+# 获取项目根目录
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CONFIG_PATH = os.path.join(BASE_DIR, 'config', 'config.json')
 
 # 加载配置
-with open('D:/hfut_info_monitor/config/config.json', 'r', encoding='utf-8') as f:
+with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
     CONFIG = json.load(f)
 
 # 垃圾信息关键词
