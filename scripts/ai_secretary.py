@@ -7,10 +7,17 @@ import json
 import requests
 from datetime import datetime
 import time
+import sys
+import os
+
+# 添加scripts目录到路径
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+# 导入配置加载模块
+from config_loader import load_config, get_json_path, get_db_path
 
 # 加载配置
-with open('D:/hfut_info_monitor/config/config.json', 'r', encoding='utf-8') as f:
-    CONFIG = json.load(f)
+CONFIG = load_config()
 
 AI_STRATEGY = CONFIG['ai_secretary']['push_strategy']
 IMPORTANT_KEYWORDS = CONFIG['ai_secretary']['filter_rules']['important_keywords']
@@ -167,14 +174,16 @@ def save_to_archive(info):
     保存信息到归档
     :param info: 信息字典
     """
+    from config_loader import get_json_path, get_db_path
+    
     # 保存到JSON文件
-    with open('D:/hfut_info_monitor/data/hfut_archive.json', 'a', encoding='utf-8') as f:
+    with open(get_json_path(), 'a', encoding='utf-8') as f:
         json.dump(info, f, ensure_ascii=False)
         f.write('\n')
     
     # 同时保存到数据库（可选）
     # import sqlite3
-    # conn = sqlite3.connect('D:/hfut_info_monitor/data/hfut_archive.db')
+    # conn = sqlite3.connect(get_db_path())
     # ...
 
 def generate_daily_digest():
@@ -182,11 +191,13 @@ def generate_daily_digest():
     生成每日摘要
     :return: 摘要内容
     """
+    from config_loader import get_json_path
+    
     print(f"📊 生成每日摘要：{datetime.now().strftime('%Y-%m-%d')}")
     
     # 读取当天归档的信息
     try:
-        with open('D:/hfut_info_monitor/data/hfut_archive.json', 'r', encoding='utf-8') as f:
+        with open(get_json_path(), 'r', encoding='utf-8') as f:
             lines = f.readlines()
         
         infos = []
