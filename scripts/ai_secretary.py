@@ -1,25 +1,44 @@
 """
 AI私人秘书模块
 功能：智能分析信息，生成摘要，制定推送策略
+
+修复：
+- 使用统一的 archive 模块（消除重复的 save_to_archive）
+- generate_daily_digest 兼容多种时间格式
+- 统一使用 logging
+- run_secretary 不再硬编码测试数据（改为从监控模块获取）
 """
 
 import json
 import requests
 from datetime import datetime
 import time
+import sys
+import os
+import logging
+from typing import Optional
+
+# 添加 scripts 目录到路径
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+# 导入配置加载模块
+from config_loader import load_config, get_json_path
 
 # 加载配置
-with open('D:/hfut_info_monitor/config/config.json', 'r', encoding='utf-8') as f:
-    CONFIG = json.load(f)
+CONFIG = load_config()
 
-AI_STRATEGY = CONFIG['ai_secretary']['push_strategy']
-IMPORTANT_KEYWORDS = CONFIG['ai_secretary']['filter_rules']['important_keywords']
+AI_STRATEGY = CONFIG.get('ai_secretary', {}).get('push_strategy', {})
+IMPORTANT_KEYWORDS = CONFIG.get('ai_secretary', {}).get('filter_rules', {}).get('important_keywords', [])
 
 # 导入自定义模块
 from filter import filter_and_extract, is_important
 from push import push_immediate, push_daily_digest
+from archive import save_to_archive, get_archive
 
-def analyze_with_rules(text):
+logger = logging.getLogger('AISecretary')
+
+
+def analyze_with_rules(text: str) -> dict:
     """
     使用规则分析信息（轻量级，适合MateBook E）
     :param text: 待分析文本
@@ -28,7 +47,7 @@ def analyze_with_rules(text):
     result = {
         'is_important': False,
         'category': '普通信息',
-        'summary': text[:100],  # 简单截取前100字符
+        'summary': text[:100],
         'keywords': []
     }
     
@@ -48,13 +67,14 @@ def analyze_with_rules(text):
     elif '招聘' in text or '就业' in text:
         result['category'] = '招聘就业'
     
-    # 规则3：生成简单摘要（取前200字符）
+    # 规则3：生成简单摘要
     if len(text) > 200:
         result['summary'] = text[:200] + '...'
     
     return result
 
-def analyze_with_llm(text, use_local=True):
+
+def analyze_with_llm(text: str, use_local=True) -> dict:
     """
     使用LLM分析信息（需要算力，适合Y7000P）
     :param text: 待分析文本
@@ -62,26 +82,25 @@ def analyze_with_llm(text, use_local=True):
     :return: 分析结果字典
     """
     if use_local:
-        # 使用本地Ollama
         return analyze_with_ollama(text)
     else:
-        # 使用云端API（GPT/Claude）
         return analyze_with_cloud_api(text)
 
-def analyze_with_ollama(text):
+
+def analyze_with_ollama(text: str) -> dict:
     """
     使用本地Ollama分析
     :param text: 待分析文本
     :return: 分析结果字典
     """
     try:
-        # 调用Ollama API
+        ollama_url = os.environ.get('OLLAMA_URL', 'http://localhost:11434')
         response = requests.post(
-            'http://localhost:11434/api/generate',
+            f'{ollama_url}/api/generate',
             json={
-                'model': 'qwen2:7b',
+                'model': CONFIG.get('ollama', {}).get('model', 'qwen2:7b'),
                 'prompt': f"""分析以下信息，输出JSON格式结果：
-                
+
 信息内容：
 {text[:500]}
 
@@ -99,29 +118,34 @@ def analyze_with_ollama(text):
         )
         
         if response.status_code == 200:
-            result = response.json()['response']
+            result = response.json().get('response', '{}')
             return json.loads(result)
         else:
-            print(f"❌ Ollama分析失败：{response.status_code}")
-            return analyze_with_rules(text)  # 降级到规则分析
+            logger.warning(f"❌ Ollama分析失败：{response.status_code}")
+            return analyze_with_rules(text)
     
+    except requests.exceptions.ConnectionError:
+        logger.warning("⚠️ Ollama 未启动，降级到规则分析")
+        return analyze_with_rules(text)
+    except (json.JSONDecodeError, KeyError) as e:
+        logger.warning(f"⚠️ Ollama 返回格式错误：{e}，降级到规则分析")
+        return analyze_with_rules(text)
     except Exception as e:
-        print(f"❌ Ollama调用失败：{e}")
-        print("⚠️  降级到规则分析")
+        logger.warning(f"❌ Ollama调用失败：{e}，降级到规则分析")
         return analyze_with_rules(text)
 
-def analyze_with_cloud_api(text):
+
+def analyze_with_cloud_api(text: str) -> dict:
     """
     使用云端API分析（需要配置API Key）
     :param text: 待分析文本
     :return: 分析结果字典
     """
-    # TODO：实现云端API调用
-    # 这里需要提供API Key
-    print("⚠️  云端API分析尚未实现，使用规则分析")
+    logger.info("⚠️ 云端API分析尚未实现，使用规则分析")
     return analyze_with_rules(text)
 
-def process_info(text, source='未知', time='未知'):
+
+def process_info(text: str, source='未知', time='未知') -> Optional[dict]:
     """
     处理单条信息
     :param text: 信息文本
@@ -129,12 +153,12 @@ def process_info(text, source='未知', time='未知'):
     :param time: 发布时间
     :return: 处理结果字典
     """
-    print(f"📊 分析信息：{text[:30]}...")
+    logger.info(f"📊 分析信息：{text[:30]}...")
     
     # Step 1：过滤垃圾信息
     is_pass, info = filter_and_extract(text)
     if not is_pass:
-        print("🗑️  过滤垃圾信息")
+        logger.debug("🗑️ 过滤垃圾信息")
         return None
     
     # Step 2：使用规则分析（MateBook E可用）
@@ -142,65 +166,51 @@ def process_info(text, source='未知', time='未知'):
     
     # Step 3：合并信息
     result = {
-        'title': info['title'],
+        'title': info.get('title', ''),
         'content': text,
         'source': source,
         'time': time,
-        'is_important': analysis['is_important'],
-        'category': analysis['category'],
-        'summary': analysis['summary'],
-        'keywords': analysis['keywords']
+        'is_important': analysis.get('is_important', False),
+        'category': analysis.get('category', '普通信息'),
+        'summary': analysis.get('summary', ''),
+        'keywords': analysis.get('keywords', [])
     }
     
     # Step 4：推送策略
-    if analysis['is_important'] and AI_STRATEGY['immediate_push']:
-        print("🚨 即时推送重要信息")
+    immediate_push = AI_STRATEGY.get('immediate_push', [])
+    should_immediate = (
+        result['is_important'] and 
+        AI_STRATEGY.get('immediate_push_enabled', True) and
+        any(kw in text for kw in immediate_push)
+    )
+    
+    if should_immediate:
+        logger.info("🚨 即时推送重要信息")
         push_immediate(result)
     else:
-        print("📝 归档普通信息")
+        logger.info("📝 归档普通信息")
         save_to_archive(result)
     
     return result
 
-def save_to_archive(info):
-    """
-    保存信息到归档
-    :param info: 信息字典
-    """
-    # 保存到JSON文件
-    with open('D:/hfut_info_monitor/data/hfut_archive.json', 'a', encoding='utf-8') as f:
-        json.dump(info, f, ensure_ascii=False)
-        f.write('\n')
-    
-    # 同时保存到数据库（可选）
-    # import sqlite3
-    # conn = sqlite3.connect('D:/hfut_info_monitor/data/hfut_archive.db')
-    # ...
 
-def generate_daily_digest():
+def generate_daily_digest() -> Optional[str]:
     """
-    生成每日摘要
-    :return: 摘要内容
-    """
-    print(f"📊 生成每日摘要：{datetime.now().strftime('%Y-%m-%d')}")
+    生成每日摘要（修复：兼容多种时间格式）
     
-    # 读取当天归档的信息
+    🔴 关键修复：
+    - 旧版只匹配精确的 '%Y-%m-%d' 格式
+    - 新版使用 startswith 匹配，兼容 '%Y-%m-%d %H:%M:%S' 等格式
+    - 使用 archive 模块的 read_today() 方法
+    """
+    logger.info(f"📊 生成每日摘要：{datetime.now().strftime('%Y-%m-%d')}")
+    
     try:
-        with open('D:/hfut_info_monitor/data/hfut_archive.json', 'r', encoding='utf-8') as f:
-            lines = f.readlines()
-        
-        infos = []
-        for line in lines:
-            try:
-                info = json.loads(line.strip())
-                # 只取当天的信息
-                if info['time'] == datetime.now().strftime('%Y-%m-%d'):
-                    infos.append(info)
-            except:
-                continue
+        # 使用统一归档模块读取当天数据（已内置时间格式兼容）
+        infos = get_archive().read_today()
         
         if not infos:
-            print("📭 今天没有新信息")
+            logger.info("📭 今天没有新信息")
             return None
         
         # 生成摘要
@@ -216,14 +226,14 @@ def generate_daily_digest():
         for i, info in enumerate(infos, 1):
             digest += f"""
 【信息 {i}】
-分类：{info['category']}
-标题：{info['title']}
-来源：{info['source']}
-时间：{info['time']}
-关键词：{', '.join(info['keywords'])}
+分类：{info.get('category', 'N/A')}
+标题：{info.get('title', 'N/A')}
+来源：{info.get('source', '未知')}
+时间：{info.get('time', '未知')}
+关键词：{', '.join(info.get('keywords', []))}
 
 摘要：
-{info['summary']}
+{info.get('summary', 'N/A')}
 
 ------------------------------------------------------------
 """
@@ -235,71 +245,88 @@ def generate_daily_digest():
 """
         
         # 推送每日摘要
-        if AI_STRATEGY['daily_digest']:
+        if AI_STRATEGY.get('daily_digest', False):
             push_daily_digest(infos)
         
         return digest
     
     except FileNotFoundError:
-        print("📭 归档文件不存在")
+        logger.info("📭 归档文件不存在")
+        return None
+    except Exception as e:
+        logger.error(f"❌ 生成每日摘要失败：{e}")
         return None
 
-def run_secretary():
+
+def run_secretary(infos=None):
     """
     AI私人秘书主函数
+    
+    Args:
+        infos: 信息列表（可选）。如果为 None，尝试从各监控模块获取。
+               不再硬编码测试数据！
     """
-    print("=" * 60)
-    print("合工大信息监控系统 - AI私人秘书")
-    print("=" * 60)
-    print(f"开始时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print()
-    
-    # 这里应该调用监控模块获取新信息
-    # 示例：
-    # from wechat_monitor import monitor_wechat
-    # new_infos = monitor_wechat()
-    
-    # 模拟处理信息
-    test_infos = [
-        {
-            'text': '【通知】明天上午9点开会',
-            'source': '微信公众号',
-            'time': datetime.now().strftime('%Y-%m-%d')
-        },
-        {
-            'text': '关于2026年保研工作的通知',
-            'source': 'QQ空间',
-            'time': datetime.now().strftime('%Y-%m-%d')
-        }
-    ]
+    logger.info("=" * 60)
+    logger.info("合工大信息监控系统 - AI私人秘书")
+    logger.info("=" * 60)
+    logger.info(f"开始时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     
     processed = []
-    for info in test_infos:
-        result = process_info(info['text'], info['source'], info['time'])
-        if result:
-            processed.append(result)
+    
+    if infos:
+        # 外部传入的信息列表（推荐方式）
+        for info in infos:
+            text = info.get('text', info.get('content', ''))
+            source = info.get('source', '未知')
+            time_str = info.get('time', datetime.now().strftime('%Y-%m-%d'))
+            
+            result = process_info(text, source, time_str)
+            if result:
+                processed.append(result)
+    else:
+        # 尝试自动从监控模块获取信息
+        logger.info("ℹ️ 未传入信息列表，尝试从监控模块采集...")
+        
+        try:
+            from wechat_monitor import monitor_wechat as collect_wechat
+            from qzone_monitor import monitor_qzone as collect_qzone
+            
+            # 注意：monitor 函数内部会自行处理和归档
+            # 这里只是触发采集
+            collect_wechat()
+            collect_qzone()
+            
+        except ImportError as e:
+            logger.warning(f"监控模块不可用：{e}")
+            logger.info("💡 提示：可以通过命令行参数 `run` 或 scheduler 自动触发完整流程")
+        except Exception as e:
+            logger.error(f"自动采集中出错：{e}")
     
     # 生成每日摘要
-    if processed and AI_STRATEGY['daily_digest']:
-        print()
+    if processed and AI_STRATEGY.get('daily_digest'):
+        logger.info("")
         generate_daily_digest()
     
-    print()
-    print(f"结束时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print("=" * 60)
+    logger.info(f"结束时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    logger.info("=" * 60)
+    
+    return processed
+
 
 if __name__ == '__main__':
-    # 测试
-    print("🧪 测试AI私人秘书模块...")
-    print()
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
     
-    # 运行私人秘书
-    run_secretary()
+    logger.info("🧪 测试AI私人秘书模块...")
     
-    print()
-    print("✅ 测试完成")
-    print()
-    print("⚠️  注意：")
-    print("  1. 需要配置监控模块才能获取实际信息")
-    print("  2. 需要配置QQ邮箱才能推送")
-    print("  3. 在Y7000P上可启用本地LLM分析（Ollama）")
+    # 测试数据（仅用于 __main__ 独立测试）
+    test_infos = [
+        {'text': '【通知】明天上午9点开会', 'source': '微信公众号', 'time': datetime.now().strftime('%Y-%m-%d')},
+        {'text': '关于2026年保研工作的通知', 'source': 'QQ空间', 'time': datetime.now().strftime('%Y-%m-%d')},
+    ]
+    
+    processed = run_secretary(test_infos)
+    
+    logger.info(f"\n✅ 测试完成，处理了 {len(processed) if processed else 0} 条信息")

@@ -1,34 +1,47 @@
 """
 微信公众号监控模块
 功能：监控合肥工业大学相关公众号，爬取文章，过滤推送
+
+修复：
+- 使用统一的 archive 模块（消除重复的 save_to_archive）
+- 统一使用 logging
+- 增强异常处理
 """
 
 import json
 import requests
 from datetime import datetime
 import time
+import sys
+import os
+import logging
+
+# 添加 scripts 目录到路径
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+# 导入配置加载模块
+from config_loader import load_config
 
 # 加载配置
-with open('D:/hfut_info_monitor/config/config.json', 'r', encoding='utf-8') as f:
-    CONFIG = json.load(f)
+CONFIG = load_config()
 
-WECHAT_ACCOUNTS = CONFIG['wechat_accounts']
-PUSH_METHOD = CONFIG['push_method']
+WECHAT_ACCOUNTS = CONFIG.get('wechat_accounts', [])
 
 # 导入自定义模块
 from filter import filter_and_extract
 from push import push_immediate, push_daily_digest
+from archive import save_to_archive
 
-def search_wechat_account(account_name):
+logger = logging.getLogger('WechatMonitor')
+
+
+def search_wechat_account(account_name: str) -> list[dict]:
     """
     搜索微信公众号（使用搜狗微信搜索）
     :param account_name: 公众号名称
     :return: 公众号信息列表
     """
-    # 注意：这里需要使用 WechatSogou 库
-    # 由于该库需要单独安装，这里提供接口框架
-    
-    print(f"🔍 搜索公众号：{account_name}")
+    logger.info(f"🔍 搜索公众号：{account_name}")
     
     # TODO：实际实现需要安装 WechatSogou
     # from wechatsogou import WechatSogouAPI
@@ -45,21 +58,17 @@ def search_wechat_account(account_name):
     
     return accounts
 
-def get_account_articles(account):
+
+def get_account_articles(account: dict) -> list[dict]:
     """
     获取公众号历史文章
     :param account: 公众号信息
     :return: 文章列表
     """
-    account_name = account['account']
-    print(f"📖 获取公众号文章：{account_name}")
+    account_name = account.get('account', '未知')
+    logger.info(f"📖 获取公众号文章：{account_name}")
     
-    # TODO：实际实现
-    # from wechatsogou import WechatSogouAPI
-    # ws_api = WechatSogouAPI()
-    # articles = ws_api.get_account_article(account['account_id'])
-    
-    # 模拟数据（实际使用时删除）
+    # TODO：实际实现需要安装 WechatSogou
     articles = [
         {
             'title': '【模拟数据】合工大2026年保研通知',
@@ -71,14 +80,19 @@ def get_account_articles(account):
     
     return articles
 
-def process_article(article):
+
+def process_article(article: dict) -> bool:
     """
     处理单篇文章
     :param article: 文章信息
     :return: 是否推送
     """
-    title = article['title']
+    title = article.get('title', '')
     content = article.get('content', '')
+    
+    if not title:
+        logger.warning("文章标题为空，跳过")
+        return False
     
     # 合并标题和内容进行过滤
     text = title + '\n' + content
@@ -87,101 +101,88 @@ def process_article(article):
     is_pass, info = filter_and_extract(text)
     
     if not is_pass:
-        print(f"🗑️  过滤垃圾信息：{title}")
+        logger.debug(f"🗑️ 过滤垃圾信息：{title[:30]}")
         return False
     
     # 补充信息
     info['source'] = '微信公众号'
     info['title'] = title
     info['url'] = article.get('article_url', '')
-    info['time'] = article.get('time', '')
+    info['time'] = article.get('time', datetime.now().strftime('%Y-%m-%d'))
     
     # 推送到QQ邮箱
-    if info['is_important']:
-        print(f"🚨 推送重要信息：{title}")
+    if info.get('is_important'):
+        logger.info(f"🚨 推送重要信息：{title}")
         push_immediate(info)
     else:
-        print(f"📝 归档普通信息：{title}")
-        # 保存到数据库或文件
+        logger.info(f"📝 归档普通信息：{title[:30]}")
         save_to_archive(info)
     
     return True
 
-def save_to_archive(info):
-    """
-    保存信息到归档
-    :param info: 信息字典
-    """
-    # 方案1：保存到JSON文件
-    with open('D:/hfut_info_monitor/data/hfut_archive.json', 'a', encoding='utf-8') as f:
-        import json
-        json.dump(info, f, ensure_ascii=False)
-        f.write('\n')
-    
-    # 方案2：保存到SQLite数据库（可选）
-    # import sqlite3
-    # conn = sqlite3.connect('D:/hfut_info_monitor/data/hfut_archive.db')
-    # ...
 
 def monitor_wechat():
     """
     主监控函数
     """
-    print("=" * 60)
-    print("合工大信息监控系统 - 微信公众号监控")
-    print("=" * 60)
-    print(f"开始时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print()
+    logger.info("=" * 60)
+    logger.info("合工大信息监控系统 - 微信公众号监控")
+    logger.info("=" * 60)
+    logger.info(f"开始时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     
     all_articles = []
     
     for account_name in WECHAT_ACCOUNTS:
-        print(f"📋 处理公众号：{account_name}")
+        logger.info(f"📋 处理公众号：{account_name}")
         
-        # Step 1：搜索公众号
-        accounts = search_wechat_account(account_name)
-        
-        if not accounts:
-            print(f"❌ 未找到公众号：{account_name}")
-            continue
-        
-        # Step 2：获取文章
-        for account in accounts:
-            articles = get_account_articles(account)
+        try:
+            # Step 1：搜索公众号
+            accounts = search_wechat_account(account_name)
             
-            print(f"  找到 {len(articles)} 篇文章")
+            if not accounts:
+                logger.warning(f"未找到公众号：{account_name}")
+                continue
             
-            # Step 3：处理每篇文章
-            for article in articles:
-                success = process_article(article)
-                if success:
-                    all_articles.append(article)
+            # Step 2：获取文章
+            for account in accounts:
+                articles = get_account_articles(account)
                 
-                # 避免频率限制
-                time.sleep(1)
-        
-        print()
+                logger.info(f"  找到 {len(articles)} 篇文章")
+                
+                # Step 3：处理每篇文章
+                for article in articles:
+                    try:
+                        success = process_article(article)
+                        if success:
+                            all_articles.append(article)
+                        
+                        # 避免频率限制
+                        time.sleep(1)
+                    except Exception as e:
+                        logger.error(f"处理文章失败：{e}")
+                        continue
+            
+        except Exception as e:
+            logger.error(f"处理公众号 [{account_name}] 时出错：{e}")
+            continue
     
-    # Step 4：生成每日摘要（如果有文章）
+    # Step 4：生成每日摘要
     if all_articles:
-        print(f"📊 共处理 {len(all_articles)} 篇文章")
-        # 这里可以调用 push_daily_digest(all_articles)
+        logger.info(f"📊 共处理 {len(all_articles)} 篇文章")
     
-    print()
-    print(f"结束时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print("=" * 60)
+    logger.info(f"结束时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    logger.info("=" * 60)
+
 
 if __name__ == '__main__':
-    # 测试
-    print("📧 测试微信公众号监控模块...")
-    print()
-    print("⚠️  注意：需要安装 WechatSogou 库才能实际使用")
-    print("   安装命令：")
-    print("   cd D:/hfut_info_monitor")
-    print("   git clone https://github.com/Chyroc/WechatSogou.git")
-    print("   cd WechatSogou")
-    print("   pip install -r requirements.txt")
-    print()
+    # 配置日志用于独立运行
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s'
+    )
+    
+    logger.info("📧 测试微信公众号监控模块...")
+    logger.info("⚠️ 注意：需要安装 WechatSogou 库才能实际使用")
     
     # 运行模拟测试
     monitor_wechat()
