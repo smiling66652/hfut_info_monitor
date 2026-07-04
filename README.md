@@ -3,8 +3,8 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.8+-blue.svg" alt="Python">
   <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-lightgrey.svg" alt="Platform">
-  <img src="https://img.shields.io/github/license/janet-lee/hfut_info_monitor.svg" alt="License">
-  <img src="https://img.shields.io/github/stars/janet-lee/hfut_info_monitor?style=social" alt="Stars">
+  <img src="https://img.shields.io/github/license/smiling66652/hfut_info_monitor.svg" alt="License">
+  <img src="https://img.shields.io/github/stars/smiling66652/hfut_info_monitor?style=social" alt="Stars">
 </p>
 
 <p align="center">
@@ -136,7 +136,7 @@ graph LR
 #### 1. 克隆项目
 
 ```bash
-git clone https://github.com/janet-lee/hfut_info_monitor.git
+git clone https://github.com/smiling66652/hfut_info_monitor.git
 cd hfut_info_monitor
 ```
 
@@ -437,7 +437,7 @@ D:\项目整理\01-代码项目\hfut_info_monitor\
 
 ### 报告Bug
 
-请使用 [GitHub Issues](https://github.com/janet-lee/hfut_info_monitor/issues) 报告Bug，并包含以下信息：
+请使用 [GitHub Issues](https://github.com/smiling66652/hfut_info_monitor/issues) 报告Bug，并包含以下信息：
 
 - 操作系统版本
 - Python版本
@@ -501,9 +501,9 @@ D:\项目整理\01-代码项目\hfut_info_monitor\
 
 ## 📊 项目统计
 
-![GitHub stars](https://img.shields.io/github/stars/janet-lee/hfut_info_monitor?style=social)
-![GitHub forks](https://img.shields.io/github/forks/janet-lee/hfut_info_monitor?style=social)
-![GitHub watchers](https://img.shields.io/github/watchers/janet-lee/hfut_info_monitor?style=social)
+![GitHub stars](https://img.shields.io/github/stars/smiling66652/hfut_info_monitor?style=social)
+![GitHub forks](https://img.shields.io/github/forks/smiling66652/hfut_info_monitor?style=social)
+![GitHub watchers](https://img.shields.io/github/watchers/smiling66652/hfut_info_monitor?style=social)
 
 ---
 
