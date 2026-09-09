@@ -128,6 +128,12 @@ build/
 .DS_Store
 Thumbs.db
 
+# Secrets — 真实配置含 SMTP 授权码 / OCR key / NapCat token，绝不入库
+config/config.json
+config/*.local.json
+*.token
+.secrets/
+
 # Project specific
 data/
 logs/
