@@ -1,11 +1,17 @@
 """
-微信公众号监控模块
+微信公众号监控模块（已弃用 - DEPRECATED）
 功能：监控合肥工业大学相关公众号，爬取文章，过滤推送
+
+⚠️ 弃用说明：
+此模块为旧版微信监控脚本，已不再被 task_orchestrator 调用。
+生产环境请使用 wechat_account_monitor.py 模块。
+本文件保留仅为历史参考，所有模拟数据已移除。
 
 修复：
 - 使用统一的 archive 模块（消除重复的 save_to_archive）
 - 统一使用 logging
 - 增强异常处理
+- 移除所有模拟/假数据返回
 """
 
 import json
@@ -41,22 +47,15 @@ def search_wechat_account(account_name: str) -> list[dict]:
     :param account_name: 公众号名称
     :return: 公众号信息列表
     """
-    logger.info(f"🔍 搜索公众号：{account_name}")
-    
-    # TODO：实际实现需要安装 WechatSogou
-    # from wechatsogou import WechatSogouAPI
-    # ws_api = WechatSogouAPI()
-    # accounts = ws_api.search_account(account_name)
-    
-    # 模拟数据（实际使用时删除）
-    accounts = [
-        {
-            'account': account_name,
-            'account_id': 'mock_id_12345'
-        }
-    ]
-    
-    return accounts
+    logger.info("🔍 搜索公众号：%s", account_name)
+
+    # ⚠️ 此模块已弃用，不再返回模拟数据
+    # 实际搜索请使用 wechat_account_monitor.py
+    logger.warning(
+        "⚠️ [DEPRECATED] wechat_monitor 已弃用，无法搜索公众号 [%s]。"
+        "请使用 wechat_account_monitor.py 替代", account_name
+    )
+    return []
 
 
 def get_account_articles(account: dict) -> list[dict]:
@@ -66,19 +65,15 @@ def get_account_articles(account: dict) -> list[dict]:
     :return: 文章列表
     """
     account_name = account.get('account', '未知')
-    logger.info(f"📖 获取公众号文章：{account_name}")
-    
-    # TODO：实际实现需要安装 WechatSogou
-    articles = [
-        {
-            'title': '【模拟数据】合工大2026年保研通知',
-            'article_url': 'http://mp.weixin.qq.com/mock_url',
-            'time': datetime.now().strftime('%Y-%m-%d'),
-            'content': '这是模拟的保研通知内容...'
-        }
-    ]
-    
-    return articles
+    logger.info("📖 获取公众号文章：%s", account_name)
+
+    # ⚠️ 此模块已弃用，不再返回模拟数据
+    # 实际文章获取请使用 wechat_account_monitor.py
+    logger.warning(
+        "⚠️ [DEPRECATED] wechat_monitor 已弃用，无法获取文章 [%s]。"
+        "请使用 wechat_account_monitor.py 替代", account_name
+    )
+    return []
 
 
 def process_article(article: dict) -> bool:

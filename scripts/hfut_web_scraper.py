@@ -1164,3 +1164,114 @@ if __name__ == '__main__':
     # print(f"\n[全量扫描结果] 总计 {result_full['total_new']} 条新数据")
     # print(f"各源统计: {result_full['sources_stats']}")
     # print(f"耗时: {result_full['elapsed_seconds']}s")
+
+
+# ============================================================
+# CLI 入口（新增）
+# ============================================================
+
+def main():
+    """CLI 入口函数 - 提供命令行接口"""
+    import argparse
+    from datetime import datetime
+    
+    parser = argparse.ArgumentParser(
+        description='合工大官网爬虫（增强版）',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+示例：
+  python hfut_web_scraper.py --mode quick      # 快速增量采集
+  python hfut_web_scraper.py --mode full       # 全量扫描
+  python hfut_web_scraper.py --mode source --source main_news  # 采集单个源
+        """
+    )
+    
+    parser.add_argument(
+        '--mode', '-m',
+        choices=['quick', 'full', 'source'],
+        default='quick',
+        help='运行模式'
+    )
+    
+    parser.add_argument(
+        '--source', '-s',
+        choices=['main_news', 'main_notice', 'xc_news', 'xc_notice'],
+        default='main_news',
+        help='单个数据源（mode=source时使用）'
+    )
+    
+    parser.add_argument(
+        '--max-pages', '-p',
+        type=int,
+        default=0,
+        help='每源最大页数（0=无限，默认0）'
+    )
+    
+    parser.add_argument(
+        '--save', '-S',
+        action='store_true',
+        help='自动保存到归档文件'
+    )
+    
+    parser.add_argument(
+        '--log-level', '-l',
+        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'],
+        default='INFO',
+        help='日志级别'
+    )
+    
+    args = parser.parse_args()
+    
+    # 配置日志
+    log_level = getattr(logging, args.log_level)
+    logging.basicConfig(
+        level=log_level,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    
+    logger.info("=" * 60)
+    logger.info('合工大官网爬虫（增强版）')
+    logger.info("=" * 60)
+    logger.info(f'运行模式: {args.mode}')
+    
+    start_time = time.time()
+    
+    # 根据模式执行
+    if args.mode == 'quick':
+        logger.info('模式：快速增量采集')
+        results = quick_scrape()
+        logger.info(f'✅ 快速采集完成，共 {len(results)} 条新数据')
+        
+        if results:
+            logger.info('前10条结果:')
+            for i, item in enumerate(results[:10], 1):
+                logger.info(f'  [{i}] {item.get("title", "N/A")[:40]}')
+                logger.info(f'      来源: {item.get("source", "未知")} | 时间: {item.get("time", "未知")}')
+        
+    elif args.mode == 'full':
+        logger.info('模式：全量扫描')
+        result = scrape_full(
+            max_pages_per_source=args.max_pages if args.max_pages > 0 else 0,
+            save_to_file=args.save
+        )
+        logger.info(f'✅ 全量扫描完成，共 {result["total_new"]} 条新数据')
+        
+    elif args.mode == 'source':
+        logger.info(f'模式：采集单个源 - {args.source}')
+        items = scrape_source(args.source, max_pages=1)
+        logger.info(f'✅ 采集完成，共 {len(items)} 条新数据')
+        
+        if items:
+            logger.info('结果:')
+            for i, item in enumerate(items[:10], 1):
+                logger.info(f'  [{i}] {item.get("title", "N/A")[:40]}')
+    
+    elapsed_time = time.time() - start_time
+    
+    logger.info("=" * 60)
+    logger.info(f'任务执行完成，耗时 {elapsed_time:.1f} 秒')
+    logger.info("=" * 60)
+
+
+if __name__ == '__main__':
+    main()

@@ -129,6 +129,44 @@ class ArchiveManager:
         
         return infos
     
+    def read_by_date(self, date: str) -> list[dict]:
+        """
+        读取指定日期的归档信息
+        兼容多种时间格式：%Y-%m-%d 和 %Y-%m-%d %H:%M:%S
+        
+        Args:
+            date: 日期字符串，格式为'%Y-%m-%d'
+            
+        Returns:
+            list[dict]: 指定日期的信息列表
+        """
+        if not self._json_path.exists():
+            return []
+        
+        infos = []
+        try:
+            with open(self._json_path, 'r', encoding='utf-8') as f:
+                for line_num, line in enumerate(f, 1):
+                    line = line.strip()
+                    if not line:
+                        continue
+                    
+                    try:
+                        info = json.loads(line)
+                        # 兼容多种时间格式
+                        info_time = info.get('time', '') or info.get('archive_time', '')
+                        
+                        # 匹配日期（无论是否包含时间部分）
+                        if info_time and info_time.startswith(date):
+                            infos.append(info)
+                    except json.JSONDecodeError as e:
+                        _archive_logger.warning(f"第 {line_num} 行 JSON 解析失败：{e}")
+                        continue
+        except IOError as e:
+            logger.error(f"读取归档文件失败：{e}")
+        
+        return infos
+    
     def read_all(self) -> list[dict]:
         """读取所有归档信息"""
         if not self._json_path.exists():

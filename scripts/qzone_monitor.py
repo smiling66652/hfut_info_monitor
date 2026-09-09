@@ -49,17 +49,10 @@ def get_qzone_moments(qq: str, cookies=None) -> list[dict]:
     # TODO：需要安装和配置 go-cqhttp
     
     # 方法2：使用 cookies 直接请求（需要登录态）
+    # 无 cookies 无法获取 QQ 空间动态，返回空列表
     if not cookies:
-        logger.warning(f"⚠️ 未提供cookies，使用模拟数据（QQ: {qq}）")
-        moments = [
-            {
-                'qq': qq,
-                'content': f'【模拟数据】QQ空间动态示例 - {datetime.now().strftime("%Y-%m-%d %H:%M")}',
-                # 🔴 关键修复：时间格式统一为 %Y-%m-%d，确保能被日报正确匹配
-                'time': datetime.now().strftime('%Y-%m-%d')
-            }
-        ]
-        return moments
+        logger.warning("⚠️ 未提供cookies，无法获取QQ空间动态（QQ: %s）。请通过 qzone_friend_feed 模块扫码登录获取 cookies", qq)
+        return []
     
     # 实际请求（需要有效的cookies）
     url = f"https://user.qzone.qq.com/{qq}/infocenter"
