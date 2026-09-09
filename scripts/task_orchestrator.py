@@ -340,7 +340,7 @@ class TaskOrchestrator:
             popen_kwargs['env'] = napcat_env
 
             process = subprocess.Popen(
-                [str(napcat_exe), "2240678683"],
+                [str(napcat_exe), "<测试QQ号>"],
                 cwd=str(napcat_exe.parent),
                 **popen_kwargs
             )

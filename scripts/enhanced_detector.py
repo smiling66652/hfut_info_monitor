@@ -17,7 +17,7 @@
     detector = EnhancedDetector()
 
     results = detector.detect({"content": "挑战杯报名通知，截止时间3月15日",
-                               "source": "qq_group", "group_id": "743058932"})
+                               "source": "qq_group", "group_id": "<测试群号1>"})
     # results = [{"category": "competition", "priority": "HIGH", ...}, ...]
 
     batch = detector.detect_batch(messages)
@@ -674,35 +674,35 @@ if __name__ == "__main__":
         {
             "content": "挑战杯报名通知，截止时间：2026年3月15日，报名方式：填写问卷https://example.com，参赛要求：全校本科生",
             "source": "qq_group",
-            "group_id": "743058932",
+            "group_id": "<测试群号1>",
         },
         {
             "content": "2026年保研夏令营开始报名了，请有意向的同学关注教务处通知",
             "source": "qq_group",
-            "group_id": "1095778372",
+            "group_id": "<测试群号2>",
         },
         # 二手类
         {
             "content": "出闲置 iPad Air 5，几乎全新，￥2500，可小刀，面交",
             "source": "qq_group",
-            "group_id": "703671976",
+            "group_id": "<测试群号3>",
         },
         {
             "content": "毕业出 MacBook Pro M3 16G 512G 99新 8000元",
             "source": "qq_group",
-            "group_id": "625100963",
+            "group_id": "<测试群号4>",
         },
         # 有用信息类
         {
             "content": "【讲座通知】明晚7点在学术报告厅有关于人工智能的学术报告",
             "source": "qq_group",
-            "group_id": "696122330",
+            "group_id": "<测试群号5>",
         },
         # 非相关
         {
             "content": "今天天气真好",
             "source": "qq_group",
-            "group_id": "696122330",
+            "group_id": "<测试群号5>",
         },
     ]
 

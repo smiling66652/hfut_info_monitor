@@ -47,7 +47,7 @@ try:
     
     if result:
         print("\n✅ 测试邮件发送成功！")
-        print(f"   收件人: 2240678683@qq.com")
+        print(f"   收件人: <测试QQ号>@qq.com")
     else:
         print("\n❌ 测试邮件发送失败")
         

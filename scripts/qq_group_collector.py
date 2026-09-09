@@ -15,7 +15,7 @@ QQ群消息采集器 - 基于 NapCat OneBot11 API
     print(collector.health_check())
 
     # 获取单群最新消息
-    msgs = collector.get_group_messages_new(1082087492, count=20)
+    msgs = collector.get_group_messages_new("<测试群号>", count=20)
     for msg in msgs:
         print(f"[{msg['sender_name']}] {msg['content'][:50]}")
 
@@ -614,7 +614,7 @@ if __name__ == "__main__":
 
     # 获取单个群的最新消息
     print("\n" + "=" * 50)
-    test_group_id = 1082087492  # 第一个群
+    test_group_id = "<测试群号>"  # 第一个群
     print(f"获取群 {test_group_id} 最新 5 条消息:")
     msgs = collector.get_group_messages_new(test_group_id, count=5)
     for msg in msgs:

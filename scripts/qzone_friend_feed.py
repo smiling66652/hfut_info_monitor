@@ -109,7 +109,7 @@ class QzoneFriendFeedPlanA:
 
     @property
     def clean_qq(self) -> str:
-        """去除 QQ UIN 前缀 (如 'o2240678683' → '2240678683')"""
+        """去除 QQ UIN 前缀 (如 'o<测试QQ号>' → '<测试QQ号>')"""
         return re.sub(r'^[a-zA-Z]+', '', self.qq) if self.qq else ''
 
     async def login(self, timeout: int = 120) -> Dict[str, Any]:

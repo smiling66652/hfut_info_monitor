@@ -114,16 +114,16 @@ t = TestRunner()
 # ==================== 测试数据 ====================
 
 COMPETITION_MSGS = [
-    {"content": "【大创通知】2026年国家级大创立项，截止时间：6月20日，报名方式：在线提交", "source": "QQ群", "group_name": "大创交流群", "group_id": "743058932"},
-    {"content": "挑战杯校赛选拔即将开始，请有意参加的同学加群 743058932", "source": "QQ群", "group_name": "竞赛通知群", "group_id": "743058932"},
+    {"content": "【大创通知】2026年国家级大创立项，截止时间：6月20日，报名方式：在线提交", "source": "QQ群", "group_name": "大创交流群", "group_id": "<测试群号1>"},
+    {"content": "挑战杯校赛选拔即将开始，请有意参加的同学加群 <测试群号1>", "source": "QQ群", "group_name": "竞赛通知群", "group_id": "<测试群号1>"},
     {"content": "保研夏令营：清华大学机械系2026夏令营报名通知", "source": "QQ空间", "nickname": "学长A"},
-    {"content": "2026年智能车竞赛校赛培训通知，报名截止：2026年5月15日，报名方式：扫描海报二维码", "source": "QQ群", "group_name": "智能车协会", "group_id": "1001728783"},
+    {"content": "2026年智能车竞赛校赛培训通知，报名截止：2026年5月15日，报名方式：扫描海报二维码", "source": "QQ群", "group_name": "智能车协会", "group_id": "<测试群号2>"},
 ]
 
 SECONDHAND_MSGS = [
-    {"content": "出iPad Pro 2024 256G 99新 带原装笔 价格4000", "source": "QQ群", "group_name": "二手交易", "group_id": "703671976"},
-    {"content": "毕业出机械键盘ikbc c87，30块拿走", "source": "QQ群", "group_name": "跳蚤市场", "group_id": "625100963"},
-    {"content": "转让全新未拆封 AirPods Pro 2，价格1200，可小刀", "source": "QQ群", "group_name": "二手闲置", "group_id": "879455018"},
+    {"content": "出iPad Pro 2024 256G 99新 带原装笔 价格4000", "source": "QQ群", "group_name": "二手交易", "group_id": "<测试群号3>"},
+    {"content": "毕业出机械键盘ikbc c87，30块拿走", "source": "QQ群", "group_name": "跳蚤市场", "group_id": "<测试群号4>"},
+    {"content": "转让全新未拆封 AirPods Pro 2，价格1200，可小刀", "source": "QQ群", "group_name": "二手闲置", "group_id": "<测试群号5>"},
 ]
 
 NORMAL_MSGS = [
@@ -277,7 +277,7 @@ def test_competition_detector():
     r3 = cd.detect({
         "content": "互联网+大赛报名截止：2026-04-20",
         "source": "qq_group",
-        "group_id": "743058932",
+        "group_id": "<测试群号1>",
     })
     t.assert_not_none("单测-dict输入", r3)
     if r3:
