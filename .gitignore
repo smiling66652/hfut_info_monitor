@@ -134,6 +134,14 @@ config/*.local.json
 *.token
 .secrets/
 
+# BuddySecretary 子系统 — config.json 含真实 NapCat token / bot_qq / 20 个 QQ 群号等隐私，绝不入库
+BuddySecretary/config.json
+BuddySecretary/logs/
+BuddySecretary/data/
+BuddySecretary/reports/
+BuddySecretary/__pycache__/
+tests/__pycache__/
+
 # Project specific
 data/
 logs/

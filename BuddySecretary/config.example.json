@@ -1,0 +1,86 @@
+{
+  "system": {
+    "name": "BuddySecretary",
+    "version": "1.0.0",
+    "description": "超级秘书 - 群消息智能管家"
+  },
+  "qq_groups": [
+    "<QQ群号>",
+    "<QQ群号>"
+  ],
+  "napcat": {
+    "enable": true,
+    "api_url": "http://localhost:3001",
+    "token": "<NAPCAT_TOKEN>",
+    "bot_qq": "<BOT_QQ>"
+  },
+  "storage": {
+    "data_dir": "<仓库绝对路径>/BuddySecretary/data",
+    "logs_dir": "<仓库绝对路径>/BuddySecretary/logs",
+    "reports_dir": "<仓库绝对路径>/BuddySecretary/reports",
+    "db_path": "<仓库绝对路径>/BuddySecretary/data/secretary.db"
+  },
+  "ai_processing": {
+    "enable": true,
+    "provider": "local",
+    "model": "qwen2.5:7b",
+    "api_url": "http://localhost:11434/api/generate",
+    "classify_prompt": "你是一个信息分类助手。请将以下QQ群消息分类：\n类别：\n- 课程学习：课程通知、作业、考试、学习资料\n- 校园活动：比赛、讲座、社团、志愿活动\n- 通知公告：官方通知、紧急事项、班级消息\n- 资源分享：资料分享、文件下载、链接分享\n- 闲聊灌水：日常聊天、表情包、水群\n- 问题求助：提问、求助、问答\n\n消息内容：{content}\n\n请只输出分类名称，不要其他内容。",
+    "summary_prompt": "你是一个信息摘要助手。请将以下QQ群消息提取关键信息，生成简洁摘要：\n\n消息内容：{content}\n\n要求：\n1. 提取关键信息（时间、地点、人物、事项）\n2. 用1-2句话概括核心内容\n3. 如果有截止日期或重要时间点，请标注\n\n请只输出摘要，不要其他内容。",
+    "importance_prompt": "你是一个重要性评估助手。请评估以下消息的重要性等级：\n\n消息内容：{content}\n\n等级说明：\n- 紧急：需要立即处理，有截止日期\n- 重要：对我有价值，建议查看\n- 一般：普通信息，可忽略\n\n请只输出等级名称，不要其他内容。"
+  },
+  "wechat_rss": {
+    "enable": true,
+    "base_url": "http://localhost:4000",
+    "sources": [
+      {
+        "name": "合肥工业大学",
+        "feed_url": "http://localhost:4000/rss/wechat/gzh_id_hfut"
+      },
+      {
+        "name": "合肥工业大学宣城校区",
+        "feed_url": "http://localhost:4000/rss/wechat/gzh_id_hfut_xc"
+      },
+      {
+        "name": "合工大宣城校区学生工作",
+        "feed_url": "http://localhost:4000/rss/wechat/gzh_id_hfut_xc_xsgz"
+      },
+      {
+        "name": "合肥工业大学教务处",
+        "feed_url": "http://localhost:4000/rss/wechat/gzh_id_hfut_jwc"
+      }
+    ]
+  },
+  "knowledge_base": {
+    "enable": true,
+    "type": "sqlite",
+    "path": "<仓库绝对路径>/BuddySecretary/data/knowledge.db",
+    "collections": {
+      "group_messages": "群消息档案",
+      "files": "文件资源库",
+      "wechat_articles": "公众号文章",
+      "tags": "标签索引"
+    }
+  },
+  "push": {
+    "enable": true,
+    "methods": ["qq", "email"],
+    "qq": {
+      "receiver": "<QQ号>@qq.com"
+    },
+    "email": {
+      "to": "<QQ号>@qq.com"
+    }
+  },
+  "scan": {
+    "full_scan": {
+      "enable": true,
+      "batch_size": 100,
+      "delay_seconds": 2
+    },
+    "incremental": {
+      "enable": true,
+      "interval_minutes": 5
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "hfut_info_monitor",
+  "description": "HFUT Info Monitor - AI-powered information monitoring and push system for Hefei University of Technology",
+  "private": false,
+  "has_issues": true,
+  "has_projects": true,
+  "has_wiki": true
+}
