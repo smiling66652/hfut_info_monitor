@@ -171,3 +171,16 @@ go-cqhttp.exe
 *.tar.gz
 *.7z
 *.rar
+
+# Local junk & runtime artifacts (never commit)
+temp_backup/
+temp_files/
+logs_legacy_backup/
+nul
+.workbuddy/
+QR.png
+scripts/QR.png
+
+# Contains a hardcoded GitHub Personal Access Token — must stay out of version control.
+# Rotate/revoke the token in GitHub, then either delete this script or move the token to an env var.
+upload_to_github.py
