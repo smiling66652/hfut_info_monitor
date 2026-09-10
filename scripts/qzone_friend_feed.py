@@ -113,8 +113,27 @@ class QzoneFriendFeedPlanA:
         return re.sub(r'^[a-zA-Z]+', '', self.qq) if self.qq else ''
 
     async def login(self, timeout: int = 120) -> Dict[str, Any]:
-        """二维码登录 (复用 qzone-api 登录流程)"""
-        logger.info("🔐 [Plan A] 开始 QQ 空间登录 (二维码方式)")
+        """二维码登录 (复用 qzone-api 登录流程)
+
+        无人值守（自动化巡检）场景说明：
+            没有人会去扫二维码，等满 120 秒纯属浪费时间——实测 2026-06-11 那次巡检
+            就在这一步白等了约 2 分钟。
+            可用环境变量 QZONE_LOGIN_TIMEOUT 覆盖等待时长；
+            设为 0 表示完全跳过二维码登录，立即走降级链路（Plan B/C/D/E）。
+        """
+        timeout = int(os.getenv('QZONE_LOGIN_TIMEOUT', str(timeout)))
+        if timeout <= 0:
+            logger.warning(
+                "⏭️ [Plan A] QZONE_LOGIN_TIMEOUT<=0，无人值守模式：跳过二维码登录，直接降级"
+            )
+            return {
+                'success': False,
+                'message': '无人值守模式，已跳过二维码登录',
+                'plan': 'A',
+                'fallback_to': 'B',
+            }
+
+        logger.info(f"🔐 [Plan A] 开始 QQ 空间登录 (二维码方式, 最长等待 {timeout}s)")
 
         if not GLOBALS['qzone_api']:
             return {'success': False, 'message': 'qzone-api 不可用', 'plan': 'A', 'fallback_to': 'B'}

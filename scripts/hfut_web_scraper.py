@@ -15,7 +15,8 @@
 
 增强特性：
 - 自动检测分页URL模式（支持多种分页格式）
-- 增强网络容错（30秒超时、5次重试）
+- 增强网络容错（按域名差异化超时/重试，不可达源快速失败）
+- 多数据源并发采集（2026-09-10 性能重构：官网采集 505.8s → 约 5s）
 - 全量扫描支持（scrape_full()遍历所有历史页）
 - 单源失败隔离（不影响其他源采集）
 """
@@ -28,6 +29,7 @@ import hashlib
 from datetime import datetime, timedelta
 from typing import Optional
 from urllib.parse import urljoin, urlparse, urlunparse
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
 from bs4 import BeautifulSoup
@@ -73,13 +75,34 @@ SOURCES = {
     }
 }
 
-# 请求配置（增强版：更长超时和更多重试）
+# 请求配置（2026-09-10 性能重构）
+#
+# 历史问题：原配置 timeout=30s / retry=5 次，对「校外根本连不通」的宣城校区域名
+# 会造成 30*5 + 退避(2+4+6+8) ≈ 170 秒/URL 的空等。实测 2026-06-11 那次巡检
+# 总耗时 1358.9 秒，其中官网采集 505.8 秒，几乎全部是 xc.hfut.edu.cn 的超时重试。
+# 对策：缩短基础超时 + 减少重试 + 按域名差异化 + 多源并发。
 REQUEST_CONFIG = {
-    'timeout': 30,  # 宣城校区网络较慢，增加到30秒
+    'timeout': 12,             # 基础超时（原 30，够用且不空等）
     'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'retry_times': 5,  # 增加重试次数到5次
+    'retry_times': 2,          # 基础重试（原 5）
     'retry_delay': 2,
     'min_request_interval': 1.5,  # 最小请求间隔(秒)，避免频率限制
+    'max_workers': 4,          # 多数据源并发采集的线程数
+    # 是否继承环境变量里的 HTTP(S)_PROXY。
+    # 实测（2026-09-10）：本机环境存在 http://127.0.0.1 的本地代理，对 hfut 域名返回
+    # 502 Bad Gateway；改为直连后 news.hfut.edu.cn 仅 0.1s 即 200。
+    # 本爬虫只访问 hfut.edu.cn，不需要代理，默认关闭。
+    'use_env_proxy': False,
+}
+
+# 按域名的差异化策略：校外直连经常不通的源，快速失败，不要浪费整个巡检的时间
+HOST_OVERRIDES = {
+    'xc.hfut.edu.cn': {
+        'timeout': 10,
+        'retry_times': 1,
+        # 校外(非校园网/WebVPN)直连基本不通，失败即走降级，不再反复重试
+        'hint': '宣城校区域名校外常不可达，需 WebVPN(webvpn.hfut.edu.cn) 或校园网内访问',
+    },
 }
 
 # 全局 HTTP 会话（复用连接）
@@ -97,6 +120,9 @@ def _get_session() -> requests.Session:
             'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
             'Cache-Control': 'no-cache',
         })
+        # 默认不走环境代理：实测本地代理对 hfut 域名返回 502，直连反而更快更稳
+        if not REQUEST_CONFIG.get('use_env_proxy', False):
+            _session.trust_env = False
     return _session
 
 
@@ -112,7 +138,13 @@ def _request(url: str) -> Optional[str]:
     """
     session = _get_session()
 
-    for attempt in range(REQUEST_CONFIG['retry_times']):
+    # 按域名套用差异化超时/重试：校外不通的源快速失败，不拖垮整次巡检
+    host = urlparse(url).hostname or ''
+    override = HOST_OVERRIDES.get(host, {})
+    timeout = override.get('timeout', REQUEST_CONFIG['timeout'])
+    retry_times = override.get('retry_times', REQUEST_CONFIG['retry_times'])
+
+    for attempt in range(retry_times):
         try:
             # 速率限制：避免请求过快被封锁
             if hasattr(_request, '_last_time'):
@@ -120,7 +152,7 @@ def _request(url: str) -> Optional[str]:
                 if elapsed < REQUEST_CONFIG['min_request_interval']:
                     time.sleep(REQUEST_CONFIG['min_request_interval'] - elapsed)
 
-            resp = session.get(url, timeout=REQUEST_CONFIG['timeout'])
+            resp = session.get(url, timeout=timeout)
             _request._last_time = time.time()
 
             if resp.status_code == 200:
@@ -145,12 +177,14 @@ def _request(url: str) -> Optional[str]:
             return None
 
         # 指数退避重试：等待时间逐渐增加
-        if attempt < REQUEST_CONFIG['retry_times'] - 1:
+        if attempt < retry_times - 1:
             wait_time = REQUEST_CONFIG['retry_delay'] * (attempt + 1)
             logger.debug(f"等待 {wait_time}s 后重试...")
             time.sleep(wait_time)
 
-    logger.error(f"请求最终失败（已重试{REQUEST_CONFIG['retry_times']}次）: {url}")
+    logger.error(f"请求最终失败（已重试{retry_times}次）: {url}")
+    if override.get('hint'):
+        logger.warning(f"  ↳ 该域名已知不可达：{override['hint']}")
     return None
 
 
@@ -943,35 +977,61 @@ def scrape_all(sources: list[str] = None, max_pages: int = 1,
     success_count = 0
     failed_sources = []
 
+    # ---- 阶段1：多源并发采集（只做网络IO+解析，不写文件）----
+    # 串行时不可达源会把超时逐源叠加（实测 505 秒几乎全是宣城域名空等）；
+    # 并发后总耗时≈最慢的单个源，而不是所有源之和。
+    workers = max(1, min(REQUEST_CONFIG.get('max_workers', 4), len(sources)))
+    collected: dict[str, list[dict]] = {}
+    source_elapsed: dict[str, float] = {}
+
+    def _scrape_one(source_key: str):
+        t0 = time.time()
+        items = scrape_source(source_key, max_pages=max_pages, seen_ids=seen_ids)
+        return items, time.time() - t0
+
+    try:
+        with ThreadPoolExecutor(max_workers=workers, thread_name_prefix='src') as executor:
+            futures = {executor.submit(_scrape_one, sk): sk for sk in sources}
+            for fut in as_completed(futures):
+                sk = futures[fut]
+                try:
+                    items, cost = fut.result()
+                except KeyboardInterrupt:
+                    raise
+                except Exception as e:
+                    logger.error(f"采集 {sk} 失败: {e}", exc_info=True)
+                    failed_sources.append(sk)
+                    continue
+                collected[sk] = items
+                source_elapsed[sk] = cost
+                logger.info(f"  ✓ {SOURCES[sk]['name']}: {len(items)} 条 ({cost:.1f}s)")
+    except KeyboardInterrupt:
+        logger.warning("用户中断采集，保存已采集的数据")
+        if auto_save and collected:
+            append_to_archive([i for v in collected.values() for i in v], json_path)
+        raise
+
+    # ---- 阶段2：串行补全详情 + 写归档（避免并发写同一 JSON）----
     for source_key in sources:
-        try:
-            items = scrape_source(source_key, max_pages=max_pages, seen_ids=seen_ids)
-
-            # 可选：获取详情页正文
-            if fetch_content_detail:
-                for item in items:
-                    content = fetch_content(item.get('url', ''))
-                    if content:
-                        item['content'] = content[:1000]  # 截断长正文
-                    # 避免请求过快
-                    time.sleep(0.5)
-
-            all_items.extend(items)
-            success_count += 1
-
-            # 自动保存（可选）：每采集完一个源就立即保存
-            if auto_save and items:
-                append_to_archive(items, json_path)
-
-        except KeyboardInterrupt:
-            logger.warning(f"用户中断采集，保存已采集的数据")
-            if auto_save and all_items:
-                append_to_archive(all_items, json_path)
-            raise
-        except Exception as e:
-            logger.error(f"采集 {source_key} 失败: {e}", exc_info=True)
-            failed_sources.append(source_key)
+        items = collected.get(source_key)
+        if items is None:
             continue
+        success_count += 1
+
+        # 可选：获取详情页正文
+        if fetch_content_detail:
+            for item in items:
+                content = fetch_content(item.get('url', ''))
+                if content:
+                    item['content'] = content[:1000]  # 截断长正文
+                # 避免请求过快
+                time.sleep(0.5)
+
+        all_items.extend(items)
+
+        # 自动保存（可选）
+        if auto_save and items:
+            append_to_archive(items, json_path)
 
     elapsed = time.time() - start_time
 
@@ -981,8 +1041,19 @@ def scrape_all(sources: list[str] = None, max_pages: int = 1,
     logger.info(f"  总计新数据: {len(all_items)} 条")
     logger.info(f"  成功源: {success_count}/{len(sources)}")
     logger.info(f"  耗时: {elapsed:.1f}秒")
+    for sk in sources:
+        name = SOURCES[sk]['name']
+        if sk in source_elapsed:
+            logger.info(f"    - {name}: {len(collected.get(sk, []))} 条 / {source_elapsed[sk]:.1f}s")
+        else:
+            logger.warning(f"    - {name}: 未采集成功（已跳过）")
     if failed_sources:
         logger.warning(f"  失败源: {failed_sources}")
+        for sk in failed_sources:
+            host = urlparse(SOURCES[sk]['list_url']).hostname or ''
+            hint = HOST_OVERRIDES.get(host, {}).get('hint')
+            if hint:
+                logger.warning(f"    ↳ {SOURCES[sk]['name']}: {hint}")
     logger.info(f"{'='*60}")
 
     # 最终保存（如果启用了自动保存且之前没保存过）
