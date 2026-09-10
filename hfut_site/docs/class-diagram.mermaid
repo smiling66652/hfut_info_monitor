@@ -1,0 +1,102 @@
+classDiagram
+    %% ── hfut_config.py ──
+    class HfutConfig {
+        +str SCRIPT_DIR
+        +str INDEX_FILE
+        +str STATE_FILE
+        +str LOG_FILE
+        +str FAILED_FILE
+        +str LATEST_FILE
+        +str EMAIL_CFG
+        +str REPORT_HTML
+        +str SUMMARY_HTML
+        +dict KEYWORDS
+        +list PRIORITY_ORDER
+        +dict CAT_COLORS
+        +dict CAT_ICONS
+        +str IMA_KB_ID
+        +str IMA_KB_FOLDER_ID
+        +str IMA_CREDENTIALS
+        +str IMA_API_BASE
+        +str IMA_API_SCRIPT
+        +str get_python()$ str
+        +str classify(title, score)$ str
+    }
+
+    %% ── hfut_scanner.py ──
+    class HfutScanner {
+        +dict HEADERS
+        +SSLContext SSL_CTX
+        +list CHANNELS
+        +int MAX_PAGES
+        +int MAX_WORKERS
+        +scan_all(full)$ dict
+        +scan_channel(url, name, pages)$ list
+        +fetch_requests_bs4(url)$ str
+        +fetch_playwright(url)$ str
+        +parse_page(html, base_url)$ list
+        +classify_item(title, score)$ str
+    }
+
+    %% ── hfut_report_gen.py ──
+    class HfutReportGen {
+        +generate()$ None
+        +build_html(items, state)$ str
+    }
+
+    %% ── hfut_email.py ──
+    class HfutEmail {
+        +build_html_report(index, state, new_count)$ str
+        +send_email(html_content, subject, config)$ bool
+        +setup_wizard()$ None
+        +_send_plain_email(text, subject, config)$ bool
+        +load_data()$ tuple
+    }
+
+    %% ── hfut_cli.py ──
+    class HfutCli {
+        +cmd_scan(full, send_email)$ None
+        +cmd_report()$ None
+        +cmd_status()$ None
+        +cmd_kb(query)$ None
+        +build_summary(index, state, new_count)$ str
+        +run_scanner(full)$ tuple
+        +run_report_gen()$ bool
+        +send_email_report(index, state, new_count)$ bool
+    }
+
+    %% ── unified_daily_cli.py ──
+    class UnifiedDailyCli {
+        +cmd_run(full)$ None
+        +cmd_test_email()$ None
+        +cmd_status()$ None
+        +run_hfut_scan(full)$ dict
+        +sync_to_ima_kb(today_items)$ dict
+        +build_combined_email(hfut_result)$ tuple
+        +send_email(subject, html_body)$ bool
+        +print_text_summary(hfut_result, ima_result)$ None
+        +log(msg)$ None
+    }
+
+    %% ── hfut_api.py ──
+    class HfutApi {
+        +Flask app
+        +index()$ Response
+        +api_status()$ Response
+        +api_scan()$ Response
+        +api_notices()$ Response
+    }
+
+    %% Relationships
+    HfutCli ..> HfutConfig : imports *
+    HfutEmail ..> HfutConfig : imports *
+    UnifiedDailyCli ..> HfutConfig : imports *
+    HfutScanner ..> HfutConfig : imports paths
+    HfutReportGen ..> HfutConfig : imports paths
+
+    UnifiedDailyCli ..> HfutScanner : subprocess
+    UnifiedDailyCli ..> HfutReportGen : subprocess
+    UnifiedDailyCli ..> HfutEmail : subprocess
+    HfutCli ..> HfutScanner : subprocess
+    HfutCli ..> HfutReportGen : subprocess
+    HfutCli ..> HfutEmail : subprocess

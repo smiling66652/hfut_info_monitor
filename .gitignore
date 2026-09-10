@@ -192,3 +192,16 @@ scripts/QR.png
 # Contains a hardcoded GitHub Personal Access Token — must stay out of version control.
 # Rotate/revoke the token in GitHub, then either delete this script or move the token to an env var.
 upload_to_github.py
+
+# === hfut_site 子系统（2026-09-11 并入）===
+# 运行时数据：体积大且频繁变动，不入库
+hfut_site/hfut_full_index.json
+hfut_site/hfut_latest_notices.json
+hfut_site/hfut_scan_state.json
+hfut_site/hfut_scan_log.json
+hfut_site/hfut_failed_sites.json
+hfut_site/hfut_report.html
+hfut_site/hfut_daily_summary.html
+hfut_site/__pycache__/
+# 邮件凭据：含 QQ SMTP 明文授权码，绝不入库（优先改用环境变量）
+hfut_site/hfut_email_config.json

@@ -1,0 +1,39 @@
+sequenceDiagram
+    participant Cron as Cron/调度器
+    participant UDC as UnifiedDailyCli
+    participant Scanner as hfut_scanner.py
+    participant Report as hfut_report_gen.py
+    participant Email as hfut_email.py
+    participant FS as 文件系统
+    participant IMA as IMA知识库API
+
+    Cron->>UDC: python unified_daily_cli.py run
+    UDC->>UDC: log("每日综合任务启动")
+
+    Note over UDC: [1/3] HFUT官网巡检
+    UDC->>Scanner: subprocess: hfut_scanner.py --pages 3
+    Scanner->>FS: 读取 hfut_full_index.json
+    Scanner->>Scanner: 爬取20个栏目
+    Scanner->>FS: 写入 hfut_full_index.json + hfut_scan_state.json
+    Scanner-->>UDC: returncode + stdout
+
+    UDC->>Report: subprocess: hfut_report_gen.py
+    Report->>FS: 读取 hfut_full_index.json
+    Report->>FS: 写入 hfut_report.html
+    Report-->>UDC: returncode
+
+    UDC->>FS: 读取 hfut_full_index.json + hfut_scan_state.json
+    UDC->>UDC: 计算 flagged, today_items, new_count
+
+    Note over UDC: [2/3] IMA知识库同步
+    loop 每条 today_item
+        UDC->>IMA: POST /api/content/add
+        IMA-->>UDC: {success, id}
+    end
+
+    Note over UDC: [3/3] 构建并发送邮件
+    UDC->>Email: subprocess: hfut_email.py --html-file=tmp --subject=subject
+    Email->>Email: SMTP发送 (465 SSL / 587 STARTTLS)
+    Email-->>UDC: returncode
+
+    UDC->>UDC: print_text_summary()
