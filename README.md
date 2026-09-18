@@ -1,4 +1,9 @@
-# 🎓 合工大信息监控系统 (HFUT Info Monitor)
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/banner-dark.svg">
+    <img src="assets/banner.svg" alt="HFUT Info Monitor — 合工大信息监控系统" width="100%">
+  </picture>
+</p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.8+-blue.svg" alt="Python">
@@ -94,31 +99,12 @@ graph LR
 
 ## 🏗️ 系统架构
 
-```
-合工大信息监控系统 v3.1
-│
-├── 📥 数据采集层
-│   ├── 微信公众号爬虫 (WechatSogou)
-│   ├── QQ空间监控 (go-cqhttp / NapCat)
-│   ├── QQ群聊监控 (go-cqhttp / NapCat)
-│   └── 官网爬虫 (Selenium + BeautifulSoup)
-│
-├── 🔧 数据处理层
-│   ├── 垃圾信息过滤 (关键词 + 正则 + AI)
-│   ├── 关键信息提取 (NLP + 正则)
-│   ├── AI智能分析 (Ollama本地LLM)
-│   └── 分类归档 (机器学习分类器)
-│
-├── 💾 数据存储层
-│   ├── SQLite数据库 (结构化存储)
-│   ├── JSON归档文件 (原始数据备份)
-│   └── IMA知识库 (可选，语义检索)
-│
-└── 📤 推送层
-    ├── QQ邮箱推送 (SMTP)
-    ├── 企业微信推送 (API)
-    └── QQ消息推送 (go-cqhttp HTTP API)
-```
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/diagram-dark.svg">
+    <img src="assets/diagram.svg" alt="HFUT Info Monitor 四层系统架构" width="100%">
+  </picture>
+</p>
 
 ---
 
@@ -345,7 +331,7 @@ python scripts/scheduler.py
 ## 📂 项目结构
 
 ```
-D:\项目整理\01-代码项目\hfut_info_monitor\
+hfut_info_monitor\
 │
 ├── 📁 config/                    # 配置文件
 │   └── config.json               # 主配置文件
@@ -454,10 +440,9 @@ D:\项目整理\01-代码项目\hfut_info_monitor\
 
 ## 📞 联系方式
 
-- **作者**: Janet Lee
+- **作者**: 江枫（smiling66652）
 - **邮箱**: 2240678683@qq.com
-- **GitHub**: [@janet-lee](https://github.com/janet-lee)
-- **B站**: [@JanetLee](https://space.bilibili.com/your-space-id)
+- **GitHub**: [@smiling66652](https://github.com/smiling66652)
 
 ---
 
@@ -510,5 +495,5 @@ D:\项目整理\01-代码项目\hfut_info_monitor\
 <div align="center">
   <strong>⭐ 如果这个项目对你有帮助，请给它一个星标！ ⭐</strong>
   <br>
-  <sub>Made with ❤️ by Janet Lee @ HFUT</sub>
+  <sub>Made with ❤️ by 江枫（smiling66652）@ HFUT</sub>
 </div>
