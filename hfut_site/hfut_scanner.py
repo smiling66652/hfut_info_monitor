@@ -900,11 +900,35 @@ def extract_jwc_dynamic(url):
         return []
 
 def load_failed_sites():
-    """加载上次失败的站点记录"""
-    if os.path.exists(BROWSER_FAILED_FILE):
+    """加载上次失败的站点记录
+
+    2026-10-10 加固（失败自锁日期衰减）：原机制 fail_count≥2 即永久跳过且缓存
+    永不清理——就业网 2026-09-24 因站点瞬时超时失败 2 次后，尽管接口早已恢复，
+    此后每次扫描仍被直接跳过（误伤半月）。现加载时惰性检查 last_fail：
+    距今 ≥7 天的条目视为过期，fail_count 重置为 0（不删除记录，保留排查痕迹），
+    使"长期失败"与"偶发失败"可自然区分，栏目恢复后能自动重新参与扫描。
+    """
+    if not os.path.exists(BROWSER_FAILED_FILE):
+        return {}
+    try:
         with open(BROWSER_FAILED_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {}
+            sites = json.load(f)
+    except Exception:
+        return {}
+    now = datetime.now()
+    decayed = []
+    for name, info in sites.items():
+        try:
+            last = datetime.strptime(info.get("last_fail", ""), "%Y-%m-%d %H:%M")
+        except Exception:
+            continue          # 日期缺失/格式异常 → 保留原状，交给既有逻辑处理
+        if (now - last).days >= 7 and info.get("fail_count", 0) > 0:
+            info["fail_count"] = 0
+            decayed.append(name)
+    if decayed:
+        print(f"     ♻ 失败缓存过期重置(≥7天): {', '.join(decayed)}")
+        save_failed_sites(sites)      # 回写，避免每次扫描重复打印
+    return sites
 
 def save_failed_sites(sites):
     """保存失败站点记录（原子写）"""
@@ -1243,20 +1267,28 @@ _GDJY_HOME = "http://gdjy.hfut.edu.cn/"
 _GDJY_API = "http://gdjy.hfut.edu.cn/module/getnotices"
 _GDJY_DETAIL = "https://hfgydx.bysjy.com.cn/detail/news?id={notice_id}&type_id={type}"
 
-def _gdjy_get(url, referer=None):
+def _gdjy_get(url, referer=None, retries=2, timeout=15):
+    # 2026-10-10 加固：原实现单次尝试、无重试——站点瞬时超时一次就整栏目判失败，
+    # 而 fail_count≥2 会触发"永久跳过"自锁（就业网 2026-09-24 失败两次后，
+    # 尽管站点早已恢复，此后每次扫描都直接跳过、报告恒显示未取到）。
+    # 加一次重试即可阻断「偶发超时 → 自锁」的链条。
     req = Request(url, headers={
         "User-Agent": HEADERS["User-Agent"],
         "Referer": referer or _GDJY_HOME,
         "X-Requested-With": "XMLHttpRequest",
         "Accept": "application/json, text/javascript, */*; q=0.01",
     })
-    try:
-        resp = (_NO_PROXY_OPENER.open(req, timeout=15)
-                if _NO_PROXY_OPENER is not None
-                else urlopen(req, timeout=15, context=SSL_CTX))
-        return resp.read().decode("utf-8", "ignore")
-    except Exception:
-        return None
+    for attempt in range(retries):
+        try:
+            resp = (_NO_PROXY_OPENER.open(req, timeout=timeout)
+                    if _NO_PROXY_OPENER is not None
+                    else urlopen(req, timeout=timeout, context=SSL_CTX))
+            return resp.read().decode("utf-8", "ignore")
+        except Exception:
+            if attempt == retries - 1:
+                return None
+            time.sleep(1)
+    return None
 
 def fetch_gdjy_api(max_type_ids=24):
     """拉取就业网全部栏目通知，返回 items 列表（已去重）。"""
