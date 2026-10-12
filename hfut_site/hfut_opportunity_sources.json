@@ -1,0 +1,1406 @@
+{
+  "_meta": {
+    "updated": "2026-09-23",
+    "note": "本文件是“去哪找”的源清单，供每日巡检按图索骥；不是条目库。所有 listing_urls 与 crawlability 均为 2026-09-23 实测结果。",
+    "crawl_layer_legend": {
+      "L0": "静态可达：curl/WebFetch 直接拿到含条目的 HTML（每日巡检默认走这层）",
+      "L0.5": "首屏静态、正文/列表可能由前端二次请求补齐：可先 curl 兜底，必要时再渲染",
+      "L1": "需浏览器渲染（SPA/JS 挑战/反爬）：需 CDP 直连(L1) 或 scripts/pw.mjs(L2)",
+      "L2": "连浏览器都拿不到（域名不可达 / WAF 硬拦）：暂不建议纳入自动巡检"
+    },
+    "provincial_pattern": "省级教育厅 URL 生成规律：多数为 jyt.<省简称>.gov.cn（如 jyt.jiangsu.gov.cn / jyt.zj.gov.cn / jyt.hubei.gov.cn / jyt.hunan.gov.cn / jyt.shaanxi.gov.cn）；直辖市与部分省份例外（上海 edu.sh.gov.cn、广东 edu.gd.gov.cn、四川 edu.sc.gov.cn、山东 edu.shandong.gov.cn、北京 jw.beijing.gov.cn）。列表页路径各省差异很大（/col/colXXXXX/、/public/column/、/gk/fdnr/、/jyzx/ 等），务必用本文件实测过的 listing_urls，不要自己拼。",
+    "excluded_sources": [
+      {
+        "name": "小红书（作为机会信息源的备选）",
+        "why_not_included": "需登录态且登录态会过期，不具备长期无人值守的稳定性，因此不纳入本清单。实测（2026-09-23，由 comp-prep 交叉验证）：explore 首页推荐流无需登录即可加载（易误判为可抓），但 search_result?keyword= 会返回登录墙（section.note-item=0）；本机 Edge 的小红书登录态已失效。判定探针：登录态失效时 #search-input 的 placeholder 变为“登录探索更多内容”；不要用 document.cookie 判断（web_session 为 HttpOnly，必然误判）。若确要使用，需人工维护登录态（profile 持久化）并准备降级来源。"
+      }
+    ],
+    "totals": {
+      "sources": 62,
+      "seed_opportunities": 10,
+      "layer_L0": 34,
+      "layer_L0_5": 2,
+      "layer_L1": 19,
+      "layer_L2": 7
+    },
+    "competition_sources_note": "登记边界（2026-09-23 与 comp-catalog 对齐）：竞赛发布方以 comp-catalog 的 hfut_competitions.json（18 条源）为登记处；本文件只保留两类——(a) 同时属于教育厅/学会机会源的（ah_jyt_comp、cmes），(b) 经双方复测确认 L0 且对保研加分有实际价值、comp-catalog 明确同意纳入的（ciscn）。其余竞赛平台（ahjsjjy.com、cxcyc.hfut.edu.cn/xkjs/jsxm.htm 等）不在此重复登记，避免两份清单漂移。"
+  },
+  "sources": [
+    {
+      "id": "moe",
+      "name": "中华人民共和国教育部",
+      "category": "国家级部委",
+      "region": "全国",
+      "home": "https://www.moe.gov.cn/",
+      "listing_urls": [
+        {"label": "公告公示", "url": "https://www.moe.gov.cn/jyb_xxgk/s5743/s5744/"},
+        {"label": "工作动态", "url": "https://www.moe.gov.cn/jyb_xwfb/gzdt_gzdt/"},
+        {"label": "教育部文件", "url": "https://www.moe.gov.cn/jyb_xxgk/moe_1777/moe_1778/"},
+        {"label": "教育部文件检索(was5)", "url": "http://www.moe.gov.cn/was5/web/search?channelid=239993"}
+      ],
+      "value": "国家层面所有学生政策/资助/就业/竞赛通知的总发布口，保研与就业政策的第一手来源。",
+      "opportunity_types": ["政策", "奖学金", "招聘", "竞赛"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "实测静态可达：公告公示列表约 105 个 <a>、命中 10 条 2026 年日期。注意首页 301 跳到 http://www.moe.gov.cn/（http 协议），跟随时保持 -L。列表页为固定路径，翻页形如 s5744/index_1.html（页码写在文件名里）。不要用 /jyb_xxgk/s5743/（返回 78 字节空壳），要落到 s5744/。"
+      }
+    },
+    {
+      "id": "most",
+      "name": "中华人民共和国科学技术部",
+      "category": "国家级部委",
+      "region": "全国",
+      "home": "https://www.most.gov.cn/",
+      "listing_urls": [
+        {"label": "通知通告", "url": "https://www.most.gov.cn/tztg/"}
+      ],
+      "value": "国家级科技项目申报、学术著作出版基金、科技人才与国际组织岗位的通知集合。",
+      "opportunity_types": ["政策", "基金", "招聘"],
+      "update_freq": "medium",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "首页实测只返回 157 字节（JS 空壳）不可用，但 /tztg/ 列表页静态可达（命中 40 条日期）。抓取时直接打列表页，别抓首页。"
+      }
+    },
+    {
+      "id": "mohrss",
+      "name": "中华人民共和国人力资源和社会保障部",
+      "category": "国家级部委",
+      "region": "全国",
+      "home": "https://www.mohrss.gov.cn/",
+      "listing_urls": [
+        {"label": "就业创业(政策文件/工作动态)", "url": "https://www.mohrss.gov.cn/SYrlzyhshbzb/jiuye/"},
+        {"label": "部委要闻(8080端口)", "url": "http://www.mohrss.gov.cn:8080/SYrlzyhshbzb/dongtaixinwen/buneiyaowen/"}
+      ],
+      "value": "高校毕业生就业政策、青年就业服务攻坚行动、三支一扶等国家级就业口径的发布方。",
+      "opportunity_types": ["政策", "招聘"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L1",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "反爬：curl 任何路径都只返回约 986 字节的 JS 挑战脚本（写入 cookie __tst_status / EO_Bot_Ssid 后 location.href 重载）。已用 scripts/pw.mjs（系统 Edge）实测可渲染出正确标题，属 L1 可解。每日巡检需走 CDP 或 pw.mjs。"
+      }
+    },
+    {
+      "id": "gqt",
+      "name": "中国共青团网（共青团中央）",
+      "category": "国家级部委",
+      "region": "全国",
+      "home": "https://www.gqt.org.cn/",
+      "listing_urls": [
+        {"label": "信息公开", "url": "https://www.gqt.org.cn/xxgk/"},
+        {"label": "团内规章和规范性文件", "url": "https://www.gqt.org.cn/xxgk/tngz_gfxwj/other_tngz/"}
+      ],
+      "value": "青年马克思主义者培养工程、大学生自强之星、西部计划等面向大学生的人才与荣誉计划的发布源头。",
+      "opportunity_types": ["人才培养计划", "奖学金", "政策"],
+      "update_freq": "medium",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "gb2312",
+        "notes": "必须按 GBK/gb2312 解码，否则中文全乱码。实测 /xxgk/ 约 72 个 <a>，/tngz_gfxwj/other_tngz/ 会自动补成 .../other_tngz/（末尾斜杠）。"
+      }
+    },
+    {
+      "id": "cast",
+      "name": "中国科学技术协会",
+      "category": "国家级部委",
+      "region": "全国",
+      "home": "https://www.cast.org.cn/",
+      "listing_urls": [
+        {"label": "通知公告", "url": "https://www.cast.org.cn/xw/TZGG/index.html"},
+        {"label": "人才(青年人才托举工程相关)", "url": "https://www.cast.org.cn/rc2/index.html"},
+        {"label": "科协动态", "url": "https://www.cast.org.cn/xw/kxdt/index.html"}
+      ],
+      "value": "“青年人才托举工程”、中国科协年会影响力论文、科技期刊项目等面向青年科研人员的计划发布方。",
+      "opportunity_types": ["人才培养计划", "基金", "政策"],
+      "update_freq": "medium",
+      "crawlability": {
+        "layer": "L1",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "通知公告列表页实测只返回 2225 字节空壳（列表由 JS 注入），需渲染；但“人才”频道 /rc2/index.html 静态可达（约 15 个 <a>）。混合源：能用静态就抓 /rc2/，/xw/TZGG/ 需上 L1。"
+      }
+    },
+    {
+      "id": "nsfc",
+      "name": "国家自然科学基金委员会",
+      "category": "国家级部委",
+      "region": "全国",
+      "home": "https://www.nsfc.gov.cn/",
+      "listing_urls": [
+        {"label": "项目指南通告", "url": "https://www.nsfc.gov.cn/p1/3381/2824/zntg.html"},
+        {"label": "基金要闻", "url": "https://www.nsfc.gov.cn/p1/3381/2821/jjyw11.html"}
+      ],
+      "value": "国家自然科学基金（含面向青年科研人员的各类项目）申请指南与结果通告的第一手发布口，做科研型保研必备。",
+      "opportunity_types": ["基金", "政策"],
+      "update_freq": "medium",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "坑：/p1/3381/2824/ 这种“目录不带文件名”的路径实测 403，务必用带文件名的 zntg.html（实测 29KB、命中 25 条日期）。首页 111KB 静态可达，内含全部栏目真实链接。"
+      }
+    },
+    {
+      "id": "xszz",
+      "name": "全国学生资助管理中心",
+      "category": "国家级部委",
+      "region": "全国",
+      "home": "https://www.xszz.edu.cn/",
+      "listing_urls": [
+        {"label": "首页(通知/政策聚合)", "url": "https://www.xszz.edu.cn/"}
+      ],
+      "value": "国家奖学金/励志奖学金/助学金的全国口径政策与评审通知发布口，是判断某学年奖助学金是否进入评审期的权威依据。",
+      "opportunity_types": ["奖学金", "政策"],
+      "update_freq": "medium",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "实测静态可达：约 245 个 <a>。中文站常用的 GBK 陷阱这里没有，utf-8 直读。"
+      }
+    },
+    {
+      "id": "gov_policy",
+      "name": "中国政府网 · 政策",
+      "category": "国家级部委",
+      "region": "全国",
+      "home": "https://www.gov.cn/zhengce/",
+      "listing_urls": [
+        {"label": "最新政策", "url": "https://www.gov.cn/zhengce/zuixin/"},
+        {"label": "政策解读", "url": "https://www.gov.cn/zhengce/jiedu/"}
+      ],
+      "value": "国务院/中办国办层面涉及大学生就业、人才、科技体制的顶层文件，用于判断长期方向。",
+      "opportunity_types": ["政策"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "静态可达。注意 /zhengce/zuixin/ 列表里日期常以“2026-09-xx”形式出现，但首页聚合页日期命中较少，抓“最新政策”子页更稳。"
+      }
+    },
+    {
+      "id": "yz_chsi",
+      "name": "中国研究生招生信息网（研招网）",
+      "category": "国家级平台",
+      "region": "全国",
+      "home": "https://yz.chsi.com.cn/",
+      "listing_urls": [
+        {"label": "推免信息公开", "url": "https://yz.chsi.com.cn/zsgs/"},
+        {"label": "教育部政策", "url": "https://yz.chsi.com.cn/kyzx/jybzc/"},
+        {"label": "网报公告", "url": "https://yz.chsi.com.cn/sswbgg/"},
+        {"label": "推免服务系统", "url": "https://yz.chsi.com.cn/tm/"}
+      ],
+      "value": "保研（推免）的官方入口：推免服务系统、各校推免公告与招生信息公开，直接对应他的保研目标。",
+      "opportunity_types": ["保研", "政策"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "推免信息公开 /zsgs/ 静态可达（命中 17 条 2026 日期）；/kyzx/jybzc/ 与 /tm/ 含前端组件（spa=1）但服务端已渲染出条目，curl 仍可拿到正文。9 月是推免季，该源优先级最高。"
+      }
+    },
+    {
+      "id": "chsi",
+      "name": "中国高等教育学生信息网（学信网）",
+      "category": "国家级平台",
+      "region": "全国",
+      "home": "https://www.chsi.com.cn/",
+      "listing_urls": [
+        {"label": "学信网招聘", "url": "https://www.chsi.com.cn/zhaopin/index.jsp"},
+        {"label": "全国大学生职业规划大赛", "url": "https://zgs.chsi.com.cn/"}
+      ],
+      "value": "学籍学历与就业服务的国家级枢纽，职业规划大赛等教育部赛事的官方入口。",
+      "opportunity_types": ["招聘", "竞赛", "政策"],
+      "update_freq": "medium",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "学信网首页与招聘页静态可达。但职业规划大赛 zgs.chsi.com.cn 是 SPA（6KB 空壳），须上 L1。"
+      }
+    },
+    {
+      "id": "ncss",
+      "name": "国家大学生就业服务平台（24365）",
+      "category": "国家级平台",
+      "region": "全国",
+      "home": "https://www.ncss.cn/",
+      "listing_urls": [
+        {"label": "专场招聘", "url": "https://www.ncss.cn/student/jobfair/index.html"},
+        {"label": "就业政策", "url": "https://www.ncss.cn/zcxw"},
+        {"label": "教育部供需对接就业育人项目", "url": "https://www.ncss.cn/jyyr"}
+      ],
+      "value": "教育部直管的校招/实习/联合招聘平台，含大量面向全国高校学生的岗位与专项招聘活动。",
+      "opportunity_types": ["招聘", "政策"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "实测静态可达：专场招聘列表 43 个 <a>，招聘会详情页（fairdetails.html?fairId=...）单页 139KB 全静态，可直接抓取岗位信息。"
+      }
+    },
+    {
+      "id": "cy_ncss",
+      "name": "全国大学生创业服务网（中国国际大学生创新大赛）",
+      "category": "国家级平台",
+      "region": "全国",
+      "home": "https://cy.ncss.cn/",
+      "listing_urls": [
+        {"label": "首页(大赛/项目通知)", "url": "https://cy.ncss.cn/"}
+      ],
+      "value": "中国国际大学生创新大赛（原“互联网+”）的官方平台，本科生创新创业最高规格赛事之一。",
+      "opportunity_types": ["竞赛", "基金"],
+      "update_freq": "medium",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "实测静态可达：101 个 <a>、命中 9 条 2026 日期。作为“源”列入；具体赛程明细属竞赛栏目，不在本文件展开。"
+      }
+    },
+    {
+      "id": "chinajob",
+      "name": "中国就业网（人社部）",
+      "category": "国家级平台",
+      "region": "全国",
+      "home": "https://chinajob.mohrss.gov.cn/",
+      "listing_urls": [
+        {"label": "首页(时政/中心工作/招聘活动)", "url": "https://chinajob.mohrss.gov.cn/"}
+      ],
+      "value": "人社部就业培训门户，发布全国性就业服务活动、职业标准与岗位信息，与 mohrss.gov.cn 主站互为备份（主站被反爬时用这个）。",
+      "opportunity_types": ["招聘", "政策"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "实测静态可达且内容量大：约 265 个 <a>、命中 65 条 2026 日期。是 mohrss 主站（L1）的静态替代路径，强烈建议优先用它。"
+      }
+    },
+    {
+      "id": "gjcxcy",
+      "name": "国家级大学生创新创业训练计划平台",
+      "category": "国家级平台",
+      "region": "全国",
+      "home": "http://gjcxcy.bjtu.edu.cn/",
+      "listing_urls": [
+        {"label": "首页(通知/公告)", "url": "http://gjcxcy.bjtu.edu.cn/"}
+      ],
+      "value": "“大创”（国家级大学生创新创业训练计划）的全国管理平台，本科生拿科研经费与成果的主渠道。",
+      "opportunity_types": ["基金", "人才培养计划"],
+      "update_freq": "medium",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "北京交通大学承办，实测静态可达（56 个 <a>）。注意是 http，不是 https。"
+      }
+    },
+    {
+      "id": "ah_jyt",
+      "name": "安徽省教育厅",
+      "category": "省级教育厅",
+      "region": "安徽",
+      "home": "https://jyt.ah.gov.cn/",
+      "listing_urls": [
+        {"label": "信息公开(通知类列表)", "url": "https://jyt.ah.gov.cn/public/column/7071?type=4&action=list"},
+        {"label": "教育要闻", "url": "https://jyt.ah.gov.cn/xwzx/jyyw/index.html"}
+      ],
+      "value": "他在安徽读书，省级教育政策、省级竞赛/奖学金/资助通知的第一手来源，实用度仅次于校内通知。",
+      "opportunity_types": ["政策", "奖学金", "竞赛"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "重要坑：列表是 query 形式 /public/column/7071?type=4&action=list（实测 35KB、命中 16 条日期）；直接访问 /public/7071/ 会 404。“教育要闻”是 /xwzx/jyyw/index.html（命中 35 条日期）。"
+      }
+    },
+    {
+      "id": "ah_kjt",
+      "name": "安徽省科学技术厅",
+      "category": "省级厅局",
+      "region": "安徽",
+      "home": "https://kjt.ah.gov.cn/",
+      "listing_urls": [
+        {"label": "通知公告", "url": "https://kjt.ah.gov.cn/kjzx/tzgg/index.html"},
+        {"label": "工作动态", "url": "https://kjt.ah.gov.cn/kjzx/gzdt/index.html"}
+      ],
+      "value": "安徽省级科技项目、平台与人才计划申报的第一手来源，机械/电气方向的省级科研资源入口。",
+      "opportunity_types": ["基金", "政策"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "实测静态可达：通知公告列表 60 个 <a>、命中 22 条日期。列表用 /kjzx/tzgg/index.html 这种目录+index.html 形式。"
+      }
+    },
+    {
+      "id": "ah_hrss",
+      "name": "安徽省人力资源和社会保障厅",
+      "category": "省级厅局",
+      "region": "安徽",
+      "home": "https://hrss.ah.gov.cn/",
+      "listing_urls": [
+        {"label": "公示公告", "url": "https://hrss.ah.gov.cn/zxzx/gsgg/index.html"},
+        {"label": "人社新闻", "url": "https://hrss.ah.gov.cn/zxzx/gzdt/index.html"}
+      ],
+      "value": "安徽省级就业见习、高校毕业生就业补贴、技能人才评选等政策的发布口。",
+      "opportunity_types": ["政策", "招聘"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "实测静态可达：公示公告 56 个 <a>、命中 22 条日期。"
+      }
+    },
+    {
+      "id": "ah_gov",
+      "name": "安徽省人民政府",
+      "category": "省级政府",
+      "region": "安徽",
+      "home": "https://www.ah.gov.cn/",
+      "listing_urls": [
+        {"label": "通知公告", "url": "https://www.ah.gov.cn/zwyw/tzgg/index.html"},
+        {"label": "政府文件", "url": "https://www.ah.gov.cn/public/column/1681?type=4&catId=6708431&action=list"}
+      ],
+      "value": "省级人才政策、重大项目与产业政策的总口径，判断安徽长期人才导向。",
+      "opportunity_types": ["政策"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "实测静态可达：通知公告 45 个 <a>、命中 32 条日期。"
+      }
+    },
+    {
+      "id": "ah_youth",
+      "name": "安徽青年网（共青团安徽省委）",
+      "category": "省级群团",
+      "region": "安徽",
+      "home": "https://www.ahyouth.com/",
+      "listing_urls": [
+        {"label": "公告栏", "url": "https://www.ahyouth.com/news/gonggaolan/"},
+        {"label": "时政要闻", "url": "https://www.ahyouth.com/news/szyw/"}
+      ],
+      "value": "安徽省内面向青年的活动、社会实践、志愿服务与青年人才计划的发布口。",
+      "opportunity_types": ["人才培养计划", "政策"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "实测静态可达：公告栏 81 个 <a>、命中 21 条日期。新闻内页形如 /news/20260923/1790865.shtml。"
+      }
+    },
+    {
+      "id": "hefei_rsj",
+      "name": "合肥市人力资源和社会保障局",
+      "category": "市级厅局",
+      "region": "安徽·合肥",
+      "home": "https://rsj.hefei.gov.cn/",
+      "listing_urls": [
+        {"label": "首页(通知公告聚合)", "url": "https://rsj.hefei.gov.cn/"}
+      ],
+      "value": "合肥本地人才政策、见习与就业补贴、市级招聘活动的发布口（合工大合肥校区同学实用）。",
+      "opportunity_types": ["政策", "招聘"],
+      "update_freq": "medium",
+      "crawlability": {
+        "layer": "L2",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "unknown",
+        "notes": "未攻克：直连与走代理均返回 HTTP 521（约 870 字节），scripts/pw.mjs 无头同样 521，判定为 WAF 按指纹拦截。要纳入巡检必须走 CDP 有头真实浏览器（本机 Edge 未开启远程调试，本次未验证成功）。暂不建议纳入自动巡检。"
+      }
+    },
+    {
+      "id": "hefei_kjj",
+      "name": "合肥市科技局",
+      "category": "市级厅局",
+      "region": "安徽·合肥",
+      "home": "https://kjj.hefei.gov.cn/",
+      "listing_urls": [
+        {"label": "首页(通知公告聚合)", "url": "https://kjj.hefei.gov.cn/"}
+      ],
+      "value": "合肥市级科技项目与创新平台申报，机械/电气方向在合肥落地科研的资源入口。",
+      "opportunity_types": ["基金", "政策"],
+      "update_freq": "medium",
+      "crawlability": {
+        "layer": "L2",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "unknown",
+        "notes": "同 hefei.gov.cn 系：直连/代理/无头浏览器一律 521。需 CDP 有头浏览器，暂不纳入。"
+      }
+    },
+    {
+      "id": "xuancheng_jy",
+      "name": "宣城市教育体育局",
+      "category": "市级厅局",
+      "region": "安徽·宣城",
+      "home": "http://jytyj.xuancheng.gov.cn/",
+      "listing_urls": [
+        {"label": "首页(通知公告聚合)", "url": "http://jytyj.xuancheng.gov.cn/"}
+      ],
+      "value": "他所在宣城校区的属地教育主管部门，属地政策与实践活动的来源。",
+      "opportunity_types": ["政策"],
+      "update_freq": "low",
+      "crawlability": {
+        "layer": "L2",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "unknown",
+        "notes": "未攻克：curl 返回 403 且 0 字节（拦截）。需浏览器指纹绕过，暂不纳入。"
+      }
+    },
+    {
+      "id": "jyt_jiangsu",
+      "name": "江苏省教育厅",
+      "category": "省级教育厅",
+      "region": "江苏",
+      "home": "https://jyt.jiangsu.gov.cn/",
+      "listing_urls": [
+        {"label": "通知公告", "url": "https://jyt.jiangsu.gov.cn/col/col58320/index.html"},
+        {"label": "政策文件", "url": "https://jyt.jiangsu.gov.cn/col/col77615/index.html"}
+      ],
+      "value": "长三角教育强省的政策与项目发布口，跨省同学的通用参照。",
+      "opportunity_types": ["政策", "奖学金", "竞赛"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "实测静态可达且条目量最大：通知公告列表 102 个 <a>、命中 91 条日期。列表走 /col/colXXXXX/index.html。"
+      }
+    },
+    {
+      "id": "jyt_zj",
+      "name": "浙江省教育厅",
+      "category": "省级教育厅",
+      "region": "浙江",
+      "home": "https://jyt.zj.gov.cn/",
+      "listing_urls": [
+        {"label": "公告公示", "url": "https://jyt.zj.gov.cn/col/col1229266336/index.html"},
+        {"label": "最新文件", "url": "https://jyt.zj.gov.cn/col/col1532970/index.html"}
+      ],
+      "value": "浙江省级教育政策与项目发布口。",
+      "opportunity_types": ["政策", "竞赛", "奖学金"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "实测静态可达：最新文件列 38KB、命中 8 条日期；公告公示列表较小（约 10 个 <a>），需配合二级栏目。"
+      }
+    },
+    {
+      "id": "edu_sh",
+      "name": "上海市教育委员会",
+      "category": "省级教育厅",
+      "region": "上海",
+      "home": "https://edu.sh.gov.cn/",
+      "listing_urls": [
+        {"label": "公示公告", "url": "https://edu.sh.gov.cn/web/gsgg/"},
+        {"label": "新闻动态", "url": "https://edu.sh.gov.cn/xwzx/index.html"}
+      ],
+      "value": "上海教育综合改革与人才政策窗口，长三角参照。",
+      "opportunity_types": ["政策", "竞赛"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L1",
+        "is_spa": true,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "首页静态可达（76KB），但“公示公告”列表页仅返回 3019 字节空壳（spa=1），条目由 JS 注入 → 需 L1 渲染。"
+      }
+    },
+    {
+      "id": "edu_gd",
+      "name": "广东省教育厅",
+      "category": "省级教育厅",
+      "region": "广东",
+      "home": "https://edu.gd.gov.cn/",
+      "listing_urls": [
+        {"label": "公示公告", "url": "https://edu.gd.gov.cn/zwgknew/gsgg/index.html"},
+        {"label": "教育政策法规", "url": "https://edu.gd.gov.cn/zwgknew/jyzcfg/index.html"}
+      ],
+      "value": "经济与教育大省的政策与项目发布口。",
+      "opportunity_types": ["政策", "竞赛", "奖学金"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "实测静态可达：公示公告 59 个 <a>、命中 20 条日期。"
+      }
+    },
+    {
+      "id": "jyt_hubei",
+      "name": "湖北省教育厅",
+      "category": "省级教育厅",
+      "region": "湖北",
+      "home": "https://jyt.hubei.gov.cn/",
+      "listing_urls": [
+        {"label": "通知公告(其他主动公开文件)", "url": "https://jyt.hubei.gov.cn/zfxxgk/zc_GK2020/qtzdgkwj_GK2020/"},
+        {"label": "部门动态", "url": "https://jyt.hubei.gov.cn/bmdt/"}
+      ],
+      "value": "中部教育大省的政策与项目发布口。",
+      "opportunity_types": ["政策", "竞赛"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "坑：用 http:// 访问该路径会 403，务必用 https://（实测约 252 个 <a>、命中 20 条日期）。"
+      }
+    },
+    {
+      "id": "edu_sc",
+      "name": "四川省教育厅",
+      "category": "省级教育厅",
+      "region": "四川",
+      "home": "https://edu.sc.gov.cn/",
+      "listing_urls": [
+        {"label": "通知公告", "url": "https://edu.sc.gov.cn/scedu/c100495/xwzx_list.shtml"},
+        {"label": "教育要闻", "url": "https://edu.sc.gov.cn/scedu/c100494/xwzx_list.shtml"}
+      ],
+      "value": "西部教育大省的政策与项目发布口。",
+      "opportunity_types": ["政策", "竞赛", "奖学金"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "同样坑：http:// 访问 403，必须 https://（实测 85 个 <a>、命中 31 条日期）。列表形如 /scedu/cXXXXXX/xwzx_list.shtml。"
+      }
+    },
+    {
+      "id": "edu_sd",
+      "name": "山东省教育厅",
+      "category": "省级教育厅",
+      "region": "山东",
+      "home": "https://edu.shandong.gov.cn/",
+      "listing_urls": [
+        {"label": "首页", "url": "https://edu.shandong.gov.cn/"}
+      ],
+      "value": "教育大省的政策与项目发布口（源本身有效，但本机网络不可达）。",
+      "opportunity_types": ["政策", "竞赛"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L2",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "unknown",
+        "notes": "未攻克：https:// 与 http:// 均返回 000（0 字节，连接层失败），scripts/pw.mjs 也拿不到。疑似网络或该站对本机出口屏蔽。建议换用 jyt.shandong.gov.cn 或第三方镜像再试。"
+      }
+    },
+    {
+      "id": "jyt_shaanxi",
+      "name": "陕西省教育厅",
+      "category": "省级教育厅",
+      "region": "陕西",
+      "home": "https://jyt.shaanxi.gov.cn/",
+      "listing_urls": [
+        {"label": "公示公告", "url": "https://jyt.shaanxi.gov.cn/gk/fdnr/gsgggk/"},
+        {"label": "教育要闻", "url": "https://jyt.shaanxi.gov.cn/index/dtyw/"}
+      ],
+      "value": "西部教育与工程学科大省的政策与项目发布口。",
+      "opportunity_types": ["政策", "奖学金", "竞赛"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "实测静态可达：公示公告 73 个 <a>、命中 12 条日期。列表用 /gk/fdnr/gsgggk/ 这种无 index.html 的目录形式。"
+      }
+    },
+    {
+      "id": "jw_beijing",
+      "name": "北京市教育委员会",
+      "category": "省级教育厅",
+      "region": "北京",
+      "home": "https://jw.beijing.gov.cn/",
+      "listing_urls": [
+        {"label": "通知公告", "url": "https://jw.beijing.gov.cn/tzgg/"},
+        {"label": "政策文件", "url": "https://jw.beijing.gov.cn/xxgk/2024zcwj/"}
+      ],
+      "value": "首都教育资源与政策窗口，保研目标院校多在北京，政策面参照价值高。",
+      "opportunity_types": ["政策", "竞赛"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "实测静态可达：通知公告 55 个 <a>、命中 20 条日期。内页形如 /tzgg/202609/t20260917_4867778.html。"
+      }
+    },
+    {
+      "id": "jyt_hunan",
+      "name": "湖南省教育厅",
+      "category": "省级教育厅",
+      "region": "湖南",
+      "home": "https://jyt.hunan.gov.cn/",
+      "listing_urls": [
+        {"label": "通知公告", "url": "https://jyt.hunan.gov.cn/jyt/sjyt/xxgk/tzgg/index.html"}
+      ],
+      "value": "中部教育大省的政策与项目发布口（含大量大学生创新创业类公示，密度高）。",
+      "opportunity_types": ["政策", "竞赛", "奖学金"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "实测静态可达：通知公告 89 个 <a>、命中 21 条日期，是省级厅里条目密度最高的之一。列表路径较长 /jyt/sjyt/xxgk/tzgg/index.html。"
+      }
+    },
+    {
+      "id": "hw_career",
+      "name": "华为校园招聘（含天才少年/实习）",
+      "category": "企业-大厂",
+      "region": "全国",
+      "home": "https://career.huawei.com/reccampportal/portal5/index.html",
+      "listing_urls": [
+        {"label": "招聘门户首页", "url": "https://career.huawei.com/reccampportal/portal5/index.html"}
+      ],
+      "value": "华为校招/实习/天才少年计划的官方投递入口，机械+电气背景可投硬件、结构与智能制造方向。",
+      "opportunity_types": ["招聘", "企业培养计划"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L1",
+        "is_spa": true,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "返回 43KB 但 spa=1、列表由前端渲染，需 L1。可作为“投递入口链接”直接放进邮件，不需要抓取条目。"
+      }
+    },
+    {
+      "id": "hw_ict",
+      "name": "华为 ICT 大赛（华为人才在线）",
+      "category": "企业-大厂",
+      "region": "全国",
+      "home": "https://e.huawei.com/cn/talent/ict-academy/",
+      "listing_urls": [
+        {"label": "ICT 大赛报名入口", "url": "https://e.huawei.com/cn/talent/ict-academy/#/ict-contest"},
+        {"label": "华为人才频道", "url": "https://e.huawei.com/cn/talent/"}
+      ],
+      "value": "纳入“全国普通高校大学生竞赛排行榜”的高含金量赛事，面向全体在校本科生（含非计算机专业）。",
+      "opportunity_types": ["竞赛", "企业培养计划"],
+      "update_freq": "medium",
+      "crawlability": {
+        "layer": "L1",
+        "is_spa": true,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "Angular 单页应用：/cn/talent/ 与 /ict-academy/ 均返回 200 但 0 个 <a>（内容全在 JS 里）。路径用 hash 路由（#/ict-contest），curl 抓不到条目 → 必须 L1。"
+      }
+    },
+    {
+      "id": "hw_developer",
+      "name": "华为开发者联盟（鸿蒙/欧拉社区）",
+      "category": "企业-大厂",
+      "region": "全国",
+      "home": "https://developer.huawei.com/consumer/cn/",
+      "listing_urls": [
+        {"label": "开发者首页(含活动/大赛)", "url": "https://developer.huawei.com/consumer/cn/"},
+        {"label": "开发者活动", "url": "https://developer.huawei.com/consumer/cn/activity/"}
+      ],
+      "value": "鸿蒙/欧拉开源社区活动、开发者大赛与学生训练营的发布口，计算机方向可积累开源履历。",
+      "opportunity_types": ["大厂活动", "竞赛", "企业培养计划"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L0.5",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "首页实测 213KB、静态可达但没有 <a>（链接由 JS 注入，非服务端渲染）；/activity/ 仅 1376 字节空壳。属于“首屏静态、列表需渲染”，必要时降级到 L1。"
+      }
+    },
+    {
+      "id": "tencent_join",
+      "name": "腾讯校园招聘",
+      "category": "企业-大厂",
+      "region": "全国",
+      "home": "https://join.qq.com/",
+      "listing_urls": [
+        {"label": "校招首页", "url": "https://join.qq.com/"}
+      ],
+      "value": "腾讯校招/实习投递入口，AI 与研发岗位大量开放。",
+      "opportunity_types": ["招聘"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L1",
+        "is_spa": true,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "仅返回 1985 字节 SPA 外壳，需 L1。建议作为固定投递链接放入邮件尾部，不必抓条目。"
+      }
+    },
+    {
+      "id": "tencent_ur",
+      "name": "腾讯高校合作（犀牛鸟计划）",
+      "category": "企业-大厂",
+      "region": "全国",
+      "home": "https://ur.tencent.com/",
+      "listing_urls": [
+        {"label": "高校合作首页", "url": "https://ur.tencent.com/"}
+      ],
+      "value": "腾讯犀牛鸟精英人才培养计划、开源人才培养计划与高校联合活动的官方发布口。",
+      "opportunity_types": ["企业培养计划", "大厂活动", "奖学金"],
+      "update_freq": "medium",
+      "crawlability": {
+        "layer": "L1",
+        "is_spa": true,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "spa=1（11KB 外壳）。子路径 /project 直接 404，不要自己拼路径；只用首页入口。需 L1。"
+      }
+    },
+    {
+      "id": "tencent_opensource",
+      "name": "腾讯开源",
+      "category": "企业-大厂",
+      "region": "全国",
+      "home": "https://opensource.tencent.com/",
+      "listing_urls": [
+        {"label": "首页(开源项目/活动)", "url": "https://opensource.tencent.com/"}
+      ],
+      "value": "腾讯开源人才培养计划与开源活动的入口，适合计算机方向积累开源贡献。",
+      "opportunity_types": ["大厂活动", "企业培养计划"],
+      "update_freq": "low",
+      "crawlability": {
+        "layer": "L1",
+        "is_spa": true,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "1080 字节空壳，需 L1。"
+      }
+    },
+    {
+      "id": "aliyun_university",
+      "name": "阿里云高校计划（云工开物）",
+      "category": "企业-大厂",
+      "region": "全国",
+      "home": "https://university.aliyun.com/",
+      "listing_urls": [
+        {"label": "高校计划首页", "url": "https://university.aliyun.com/"},
+        {"label": "天池学生算力券", "url": "https://university.aliyun.com/action/tianchi"}
+      ],
+      "value": "面向在校生免费发算力券（学生认证后 300 元/年）、开放训练营与动手实验，做项目/参赛的免费资源。",
+      "opportunity_types": ["企业培养计划", "基金", "大厂活动"],
+      "update_freq": "medium",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "实测静态可达且条目量大：135KB、126 个 <a>、命中 8 条日期。注意 developer.aliyun.com/adc/student/ 会 302 到这里，直接用本 URL。"
+      }
+    },
+    {
+      "id": "ali_tianchi",
+      "name": "阿里云天池大赛",
+      "category": "企业-大厂",
+      "region": "全国",
+      "home": "https://tianchi.aliyun.com/",
+      "listing_urls": [
+        {"label": "竞赛列表", "url": "https://tianchi.aliyun.com/competition"},
+        {"label": "首页", "url": "https://tianchi.aliyun.com/"}
+      ],
+      "value": "数据/AI 类竞赛与算法实践的常年开放平台，计算机方向刷项目与履历的高频入口。",
+      "opportunity_types": ["竞赛", "大厂活动"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "实测静态可达：/competition 约 90 个 <a>。竞赛条目内容由前端二次请求，属“首屏静态”，必要时降级 L1。"
+      }
+    },
+    {
+      "id": "ali_talent",
+      "name": "阿里巴巴校园招聘",
+      "category": "企业-大厂",
+      "region": "全国",
+      "home": "https://talent.alibaba.com/",
+      "listing_urls": [
+        {"label": "招聘首页", "url": "https://talent.alibaba.com/"}
+      ],
+      "value": "阿里（含阿里云、达摩院）校招/实习投递入口。",
+      "opportunity_types": ["招聘"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L1",
+        "is_spa": true,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "7969 字节 SPA 外壳，需 L1。"
+      }
+    },
+    {
+      "id": "bytedance_campus",
+      "name": "字节跳动校园招聘",
+      "category": "企业-大厂",
+      "region": "全国",
+      "home": "https://jobs.bytedance.com/campus",
+      "listing_urls": [
+        {"label": "校招职位列表", "url": "https://jobs.bytedance.com/campus/position"}
+      ],
+      "value": "字节校招/实习入口，AI 与研发岗位扩招明显；招聘对象为 2026-09~2027-08 毕业生。",
+      "opportunity_types": ["招聘"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L0.5",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "首屏 916KB 服务端渲染、含 14 条日期与 42 个 <a>，curl 能拿到岗位列表骨架；详情需前端补数据。日常巡检可作为“岗位是否开放”的信号源。"
+      }
+    },
+    {
+      "id": "bytedance_youth",
+      "name": "字节跳动青训营",
+      "category": "企业-大厂",
+      "region": "全国",
+      "home": "https://youthcamp.bytedance.com/",
+      "listing_urls": [
+        {"label": "青训营入口", "url": "https://youthcamp.bytedance.com/"}
+      ],
+      "value": "面向在校生的技术训练营（前端/后端/客户端），免费、有结营证书。",
+      "opportunity_types": ["企业培养计划", "大厂活动"],
+      "update_freq": "low",
+      "crawlability": {
+        "layer": "L1",
+        "is_spa": true,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "实测 302 跳转到 juejin.cn（掘金），落地页为 SPA，需 L1。青训营通常暑期开营，非全年开放。"
+      }
+    },
+    {
+      "id": "baidu_aistudio",
+      "name": "百度飞桨 AI Studio",
+      "category": "企业-大厂",
+      "region": "全国",
+      "home": "https://aistudio.baidu.com/",
+      "listing_urls": [
+        {"label": "竞赛列表", "url": "https://aistudio.baidu.com/competition"},
+        {"label": "首页", "url": "https://aistudio.baidu.com/"}
+      ],
+      "value": "免费 GPU 算力 + 大量 AI 竞赛与课程，AI 入门与刷项目的高性价比平台。",
+      "opportunity_types": ["竞赛", "企业培养计划", "大厂活动"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L1",
+        "is_spa": true,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "首页与 /competition 均只返回约 14KB 空壳（0 个 <a>），内容全由 JS 注入，需 L1。"
+      }
+    },
+    {
+      "id": "baidu_talent",
+      "name": "百度校园招聘",
+      "category": "企业-大厂",
+      "region": "全国",
+      "home": "https://talent.baidu.com/",
+      "listing_urls": [
+        {"label": "招聘首页", "url": "https://talent.baidu.com/"}
+      ],
+      "value": "百度校招投递入口，AI 岗位占比高。",
+      "opportunity_types": ["招聘"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L1",
+        "is_spa": true,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "spa=1，默认落地 social 招聘页，需 L1。"
+      }
+    },
+    {
+      "id": "meituan_zhaopin",
+      "name": "美团招聘",
+      "category": "企业-大厂",
+      "region": "全国",
+      "home": "https://zhaopin.meituan.com/",
+      "listing_urls": [
+        {"label": "校招入口", "url": "https://zhaopin.meituan.com/m/campus"}
+      ],
+      "value": "美团校招/实习入口（含“北斗计划”与 AI Native 岗位）。",
+      "opportunity_types": ["招聘"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L1",
+        "is_spa": true,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "web/home 与 m/campus 均 0 个 <a>（SPA），需 L1。"
+      }
+    },
+    {
+      "id": "xiaomi_hr",
+      "name": "小米招聘",
+      "category": "企业-大厂",
+      "region": "全国",
+      "home": "https://hr.xiaomi.com/",
+      "listing_urls": [
+        {"label": "校园招聘", "url": "https://hr.xiaomi.com/campus"}
+      ],
+      "value": "小米校招入口，硬件/结构/电子方向与机械背景契合度高。",
+      "opportunity_types": ["招聘"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L1",
+        "is_spa": true,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "首页 607 字节空壳，需 L1。"
+      }
+    },
+    {
+      "id": "zte_campus",
+      "name": "中兴通讯招聘",
+      "category": "企业-大厂",
+      "region": "全国",
+      "home": "https://job.zte.com.cn/cn/",
+      "listing_urls": [
+        {"label": "招聘首页", "url": "https://job.zte.com.cn/cn/"}
+      ],
+      "value": "通信设备大厂校招入口，硬件/电磁/机械结构方向对口。",
+      "opportunity_types": ["招聘"],
+      "update_freq": "medium",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "实测静态可达：49KB、64 个 <a>。是少数不用渲染就能抓到招聘信息的大厂站。"
+      }
+    },
+    {
+      "id": "jd_campus",
+      "name": "京东校园招聘",
+      "category": "企业-大厂",
+      "region": "全国",
+      "home": "https://campus.jd.com/",
+      "listing_urls": [
+        {"label": "校招首页", "url": "https://campus.jd.com/"}
+      ],
+      "value": "京东校招入口，供应链/物流与智能装备方向有机械相关岗位。",
+      "opportunity_types": ["招聘"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L1",
+        "is_spa": true,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "spa=1、0 个 <a>，需 L1。"
+      }
+    },
+    {
+      "id": "netease_hr",
+      "name": "网易招聘",
+      "category": "企业-大厂",
+      "region": "全国",
+      "home": "https://hr.163.com/",
+      "listing_urls": [
+        {"label": "招聘首页", "url": "https://hr.163.com/"}
+      ],
+      "value": "网易（含游戏、严选、有道）校招入口。",
+      "opportunity_types": ["招聘"],
+      "update_freq": "medium",
+      "crawlability": {
+        "layer": "L1",
+        "is_spa": true,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "6083 字节 SPA 外壳，需 L1。"
+      }
+    },
+    {
+      "id": "nio",
+      "name": "蔚来（NIO）",
+      "category": "企业-新能源车企",
+      "region": "全国",
+      "home": "https://www.nio.cn/",
+      "listing_urls": [
+        {"label": "官网(新闻/活动)", "url": "https://www.nio.cn/"}
+      ],
+      "value": "新能源汽车头部企业，机械/车辆/电气背景高度对口；最新动态与校园活动可从官网新闻区获取。",
+      "opportunity_types": ["招聘", "大厂活动"],
+      "update_freq": "medium",
+      "crawlability": {
+        "layer": "L1",
+        "is_spa": true,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "首页 218KB、命中 81 条日期（新闻可读），但 spa=1，动态部分需渲染；/campus 路径 404，不要自己拼，改为从官网导航进入。"
+      }
+    },
+    {
+      "id": "catl",
+      "name": "宁德时代（CATL）",
+      "category": "企业-新能源车企",
+      "region": "全国",
+      "home": "https://www.catl.com/",
+      "listing_urls": [
+        {"label": "官网(新闻/公告)", "url": "https://www.catl.com/"}
+      ],
+      "value": "动力电池全球龙头，机械/材料/电气方向招聘与实习生需求大。",
+      "opportunity_types": ["招聘"],
+      "update_freq": "medium",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "官网实测静态可达（150 个 <a>、命中 3 条日期）。但招聘子页 /careers/ 返回 404（招聘已迁到第三方系统），要拿岗位需从官网跳转。"
+      }
+    },
+    {
+      "id": "byd",
+      "name": "比亚迪招聘",
+      "category": "企业-新能源车企",
+      "region": "全国",
+      "home": "https://job.byd.com/",
+      "listing_urls": [
+        {"label": "招聘官网", "url": "https://job.byd.com/"}
+      ],
+      "value": "新能源整车龙头，机械/车辆/自动化背景的校招大户。",
+      "opportunity_types": ["招聘"],
+      "update_freq": "medium",
+      "crawlability": {
+        "layer": "L2",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "unknown",
+        "notes": "未攻克：job.byd.com 与 hr.byd.com 均返回 000（连接层失败），www.byd.com/cn/recruit 返回 404。建议改从学校就业网或 ncss 平台获取其校招信息。"
+      }
+    },
+    {
+      "id": "tangfoundation",
+      "name": "唐仲英基金会（唐仲英德育奖学金）",
+      "category": "基金会-奖学金",
+      "region": "全国",
+      "home": "http://www.cyrustangfoundation.org.cn/",
+      "listing_urls": [
+        {"label": "基金会官网", "url": "http://www.cyrustangfoundation.org.cn/"}
+      ],
+      "value": "面向高校本科生的德育奖学金（多校设奖），评审通常在秋季学期，是校级奖学金之外的可争取项。",
+      "opportunity_types": ["奖学金"],
+      "update_freq": "low",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "实测可达：域名 www.tangfoundation.org.cn 会 302 到 cyrustangfoundation.org.cn（56 个 <a>）。注意记最终域名，否则每日巡检会跟丢。"
+      }
+    },
+    {
+      "id": "sclf",
+      "name": "中国宋庆龄基金会",
+      "category": "基金会-奖学金",
+      "region": "全国",
+      "home": "https://www.sclf.org/",
+      "listing_urls": [
+        {"label": "官网(项目/公告)", "url": "https://www.sclf.org/"}
+      ],
+      "value": "面向青少年的公益项目与奖助学金发布方，含未来工程/助学类项目。",
+      "opportunity_types": ["奖学金", "基金"],
+      "update_freq": "medium",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "实测静态可达：36KB、103 个 <a>。"
+      }
+    },
+    {
+      "id": "cydf",
+      "name": "中国青少年发展基金会（希望工程）",
+      "category": "基金会-奖学金",
+      "region": "全国",
+      "home": "https://www.cydf.org.cn/",
+      "listing_urls": [
+        {"label": "官网(项目/公告)", "url": "https://www.cydf.org.cn/"}
+      ],
+      "value": "国家级青少年公益基金会，助学金、实践项目与公益岗位的发布方。",
+      "opportunity_types": ["奖学金", "基金"],
+      "update_freq": "medium",
+      "crawlability": {
+        "layer": "L1",
+        "is_spa": true,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "首页 481KB 但 spa=1、0 个 <a>，内容靠 JS 注入，需 L1。"
+      }
+    },
+    {
+      "id": "csc",
+      "name": "国家留学基金委",
+      "category": "基金-留学",
+      "region": "全国",
+      "home": "https://www.csc.edu.cn/",
+      "listing_urls": [
+        {"label": "官网(项目/通知)", "url": "https://www.csc.edu.cn/"}
+      ],
+      "value": "国家公派留学与联合培养项目的唯一官方发布口，对走学术路线（尤其电气/计算机）的同学长期有价值。",
+      "opportunity_types": ["基金", "人才培养计划"],
+      "update_freq": "medium",
+      "crawlability": {
+        "layer": "L1",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "反爬：curl 返回 HTTP 412 + 2452 字节（风控页），需浏览器渲染，标 L1。"
+      }
+    },
+    {
+      "id": "bgjj",
+      "name": "宝钢教育基金会（宝钢优秀学生奖）",
+      "category": "基金会-奖学金",
+      "region": "全国",
+      "home": "http://www.bgjj.org.cn/",
+      "listing_urls": [
+        {"label": "基金会官网", "url": "http://www.bgjj.org.cn/"}
+      ],
+      "value": "面向全国高校本科生的知名企业奖学金（宝钢优秀学生奖），理工科院校覆盖广。",
+      "opportunity_types": ["奖学金"],
+      "update_freq": "low",
+      "crawlability": {
+        "layer": "L2",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "unknown",
+        "notes": "未攻克：返回 HTTP 502（70 字节 text/plain），站点当前不可用或已下线。建议改用学校学生处/基金会通知作为替代来源。"
+      }
+    },
+    {
+      "id": "ah_jyt_comp",
+      "name": "安徽省教育厅 · 大学生学科和技能竞赛专栏",
+      "category": "省级教育厅",
+      "region": "安徽",
+      "home": "https://jyt.ah.gov.cn/tsdw/gdjyc/dxsxkhjnjs/index.html",
+      "listing_urls": [
+        {"label": "大学生学科和技能竞赛(省级赛通知专栏)", "url": "https://jyt.ah.gov.cn/tsdw/gdjyc/dxsxkhjnjs/index.html"},
+        {"label": "皖教秘高〔2026〕2号 2026年安徽省大学生学科和技能竞赛名单", "url": "https://jyt.ah.gov.cn/tsdw/gdjyc/tzgg/40780091.html"}
+      ],
+      "value": "安徽省级大学生竞赛通知的官方唯一发布处；合工大是工创赛安徽赛区、智能车安徽赛区、安徽省机器人大赛、信息安全竞赛安徽省赛、大数据与AI应用竞赛等 5 项省级赛的牵头单位，这些通知都会先从这里发。",
+      "opportunity_types": ["竞赛", "政策"],
+      "update_freq": "high",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "实测静态可达：专栏列表 39KB、65 个 <a>、命中 35 条 2026 日期；正文在 HTML 里，附件多为 .docx/.pdf 直链可下。坑：用 http:// 会 301，必须用 https://。列表路径形如 /tsdw/gdjyc/dxsxkhjnjs/index.html。"
+      }
+    },
+    {
+      "id": "cmes",
+      "name": "中国机械工程学会",
+      "category": "行业学会",
+      "region": "全国",
+      "home": "https://www.cmes.org/",
+      "listing_urls": [
+        {"label": "学会官网(竞赛/奖项/人才举荐)", "url": "https://www.cmes.org/cmes"}
+      ],
+      "value": "机械工程领域最大的全国性学会，发布机械工程创新创意大赛、科技奖项与青年人才举荐信息，与他“机械工程”本专业高度对口。",
+      "opportunity_types": ["竞赛", "人才培养计划", "奖学金"],
+      "update_freq": "medium",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "实测静态可达：/ 会 302 到 /cmes，最终 76KB、216 个 <a>、命中 17 条日期。抓取时用最终地址 https://www.cmes.org/cmes。"
+      }
+    },
+    {
+      "id": "ciscn",
+      "name": "全国大学生信息安全竞赛（官网）",
+      "category": "竞赛发布方",
+      "region": "全国",
+      "home": "http://www.ciscn.cn/",
+      "listing_urls": [
+        {"label": "官网(赛事通知/新闻)", "url": "http://www.ciscn.cn/"}
+      ],
+      "value": "全国大学生信息安全竞赛官方站，同时是合工大牵头的“全国大学生信息安全竞赛安徽省赛”的通知集散处，对计算机方向保研加分有实际价值。",
+      "opportunity_types": ["竞赛"],
+      "update_freq": "medium",
+      "crawlability": {
+        "layer": "L0",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "utf-8",
+        "notes": "实测静态可达：81KB、87 个 <a>、正文在 HTML 里。注意是 http（非 https）。易混：isclab.org.cn（ISCC，信息安全与对抗技术竞赛）是另一个赛事，勿合并。"
+      }
+    },
+    {
+      "id": "mysjjh",
+      "name": "茅以升科技教育基金会",
+      "category": "基金会-奖学金",
+      "region": "全国",
+      "home": "http://www.mysjjh.org.cn/",
+      "listing_urls": [
+        {"label": "基金会官网", "url": "http://www.mysjjh.org.cn/"}
+      ],
+      "value": "面向土木/机械等工程类学生的科技教育奖励与竞赛资助。",
+      "opportunity_types": ["奖学金", "基金"],
+      "update_freq": "low",
+      "crawlability": {
+        "layer": "L2",
+        "is_spa": false,
+        "needs_login": false,
+        "encoding": "unknown",
+        "notes": "未攻克：返回 HTTP 502（70 字节），站点不可用。"
+      }
+    }
+  ],
+  "seed_opportunities": [
+    {
+      "name": "第十一届华为 ICT 大赛（2026-2027 中国赛）",
+      "org": "华为技术有限公司",
+      "type": "大厂活动",
+      "url": "https://e.huawei.com/cn/talent/ict-academy/#/ict-contest",
+      "deadline": "2026-10-31",
+      "region": "全国",
+      "why": "已纳入中国高等教育学会“全国普通高校大学生竞赛排行榜”，含金量高；设创新赛/编程赛/算子赛等多赛道，非计算机专业也可参加，机械+电气背景可打“AI+ICT”创新赛。实践赛/挑战赛报名截至 10-31，创新赛/编程赛截至 11-30。",
+      "verified": true
+    },
+    {
+      "name": "字节跳动 2027 校园招聘",
+      "org": "字节跳动",
+      "type": "招聘",
+      "url": "https://jobs.bytedance.com/campus",
+      "deadline": "2027-05-31",
+      "region": "全国",
+      "why": "面向 2026-09~2027-08 毕业的 2027 届学生（本科可投），今年大幅扩招 AI 全栈/AI Agent 岗位；全年开放投递，2026-08-03~12-31 有两次投递机会。",
+      "verified": true
+    },
+    {
+      "name": "美团 2027 届校园招聘（含北斗计划）",
+      "org": "美团",
+      "type": "招聘",
+      "url": "https://zhaopin.meituan.com/m/campus",
+      "deadline": null,
+      "region": "全国",
+      "why": "2026-08-17 起开放投递，10 大类 100+ 岗位；“北斗计划”全年招聘且不占常规秋招志愿。技术类岗位对机械/电气转码友好。",
+      "verified": true
+    },
+    {
+      "name": "腾讯 2027 校园招聘",
+      "org": "腾讯",
+      "type": "招聘",
+      "url": "https://join.qq.com/",
+      "deadline": null,
+      "region": "全国",
+      "why": "2026-08-11 启动，新增 AI 全栈/Agent 开发等岗位；多数岗位集中在 8-10 月完成面试与录用，现在是最后一波窗口。",
+      "verified": true
+    },
+    {
+      "name": "百度 2027 届校园招聘",
+      "org": "百度",
+      "type": "招聘",
+      "url": "https://talent.baidu.com/",
+      "deadline": null,
+      "region": "全国",
+      "why": "2026-07-09 启动，AI 相关岗位占比超 90%，共 74 个细分职位；应聘通道全年开放，越早投递机会越多。",
+      "verified": true
+    },
+    {
+      "name": "教育部 2027 届高校毕业生“金秋启航”校园招聘月",
+      "org": "教育部",
+      "type": "招聘",
+      "url": "https://www.moe.gov.cn/jyb_xwfb/gzdt_gzdt/s5987/202609/t20260918_1451304.html",
+      "deadline": null,
+      "region": "全国",
+      "why": "教育部 2026-09-18 启动的全国性校园招聘专项活动，是秋招季的官方信号与总入口，可据此跟踪后续各地各校落地场次。",
+      "verified": true
+    },
+    {
+      "name": "2027 届高校毕业生全国网络联合招聘（国家大学生就业服务平台）",
+      "org": "教育部学生服务与素质发展中心",
+      "type": "招聘",
+      "url": "https://www.ncss.cn/student/jobfair/fairdetails.html?fairId=7fUt9qv2RwqKhHb6rrcQgL",
+      "deadline": null,
+      "region": "全国",
+      "why": "24365 平台上的全国网络联合招聘专场，页面全静态、岗位信息可直接抓取，适合作为每日巡检的第一批岗位源。",
+      "verified": true
+    },
+    {
+      "name": "阿里云高校计划“云工开物”学生算力券（300 元/年）",
+      "org": "阿里云",
+      "type": "企业培养计划",
+      "url": "https://university.aliyun.com/",
+      "deadline": null,
+      "region": "全国",
+      "why": "完成学生认证即可领 300 元无门槛算力券（有效期 1 年），用于跑比赛、做课程设计与科研实验，是无成本提升项目履历的确定性资源。",
+      "verified": true
+    },
+    {
+      "name": "阿里云天池大赛（常年开放）",
+      "org": "阿里云",
+      "type": "大厂活动",
+      "url": "https://tianchi.aliyun.com/competition",
+      "deadline": null,
+      "region": "全国",
+      "why": "数据/AI 类竞赛全年滚动开放，是计算机方向刷项目、拿名次最稳定的入口；页面静态可达，可纳入自动巡检。",
+      "verified": true
+    },
+    {
+      "name": "2025—2026 学年国家奖学金评审（各校 9-10 月）",
+      "org": "全国学生资助管理中心 / 各高校学生工作部",
+      "type": "奖学金",
+      "url": "https://www.xszz.edu.cn/",
+      "deadline": null,
+      "region": "全国",
+      "why": "本专科生国家奖学金 10000 元/年，各校 2026 年 9 月（多数 9-18~9-24）组织学生申报、10 月校级评审公示；对保研综合测评与材料是硬通货。经多所高校 2026-09 通知交叉验证仍在评审窗口内。",
+      "verified": true
+    }
+  ]
+}

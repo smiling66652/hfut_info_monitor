@@ -18,6 +18,11 @@ sqlite3  # Python内置，无需安装
 smtplib  # Python内置，无需安装
 email     # Python内置，无需安装
 
+### 多渠道推送（可选，推荐安装）
+# 支持钉钉/企业微信/飞书/PushDeer/PushPlus/WxPusher/Bark/ntfy 等 214 个渠道
+# 模块：hfut_site/hfut_notify.py    配置：hfut_site/hfut_notify_config.json
+apprise>=1.13.1
+
 ### 定时任务
 apscheduler>=3.10.0
 

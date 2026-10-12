@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>合工大每日情报 · 功能扩展与优化深度调研</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family:"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;
+         background:#eef2f7; color:#1f2937; margin:0; padding:28px 14px; line-height:1.7; }
+  .container { max-width:980px; margin:0 auto; background:#fff; border-radius:16px;
+               box-shadow:0 6px 28px rgba(15,23,42,.10); overflow:hidden; }
+  .header { background:#f6f9fd; border-left:4px solid #2563eb; padding:26px 30px 22px; }
+  .header h1 { margin:0 0 6px; font-size:24px; font-weight:700; color:#0f172a; }
+  .header .sub { font-size:13px; color:#64748b; }
+  .body { padding:24px 30px 34px; }
+  h2 { font-size:19px; margin:30px 0 12px; padding-bottom:8px; border-bottom:2px solid #eef2f7; color:#111827; }
+  h3 { font-size:16px; margin:20px 0 8px; color:#1d4ed8; }
+  p { margin:8px 0; font-size:14.5px; }
+  ul, ol { font-size:14.5px; padding-left:22px; }
+  li { margin:5px 0; }
+  table { width:100%; border-collapse:collapse; margin:14px 0; font-size:13.5px; }
+  th, td { border:1px solid #e5e7eb; padding:8px 10px; text-align:left; vertical-align:top; }
+  th { background:#f6f9fd; color:#0f172a; font-weight:600; }
+  tr:nth-child(even) td { background:#fafcff; }
+  code { background:#f1f5f9; padding:1px 5px; border-radius:4px; font-size:12.5px; color:#be123c; }
+  .tag { display:inline-block; font-size:11.5px; padding:1px 8px; border-radius:10px; font-weight:600; }
+  .p0 { background:#fee2e2; color:#b91c1c; }
+  .p1 { background:#fef3c7; color:#b45309; }
+  .p2 { background:#dcfce7; color:#15803d; }
+  .box { border-left:4px solid #6366f1; background:#f8fafc; padding:12px 16px; border-radius:0 10px 10px 0; margin:14px 0; }
+  .box.warn { border-left-color:#f59e0b; }
+  .box.good { border-left-color:#10b981; }
+  .muted { color:#64748b; font-size:13px; }
+  .kpi { display:flex; gap:14px; flex-wrap:wrap; margin:16px 0; }
+  .kpi .c { background:#f6f9fd; border:1px solid #e5edf7; border-radius:12px; padding:14px 18px; min-width:120px; }
+  .kpi .n { font-size:22px; font-weight:700; color:#1d4ed8; }
+  .kpi .l { font-size:12px; color:#64748b; }
+  .foot { border-top:1px solid #eef2f7; padding:16px 30px; color:#64748b; font-size:12.5px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>合工大每日情报 · 功能扩展与优化深度调研</h1>
+    <div class="sub">统一巡检系统 v5.1 · 调研日期 2026-09-27 · 面向「2026 中国国际大学生创新大赛」主线项目</div>
+  </div>
+  <div class="body">
+
+    <div class="kpi">
+      <div class="c"><div class="n">37</div><div class="l">官网栏目（含 1 个已知失败）</div></div>
+      <div class="c"><div class="n">3</div><div class="l">抓取引擎层级（urllib→requests→CDP）</div></div>
+      <div class="c"><div class="n">3</div><div class="l">AI 分析层级（L1规则/L2 Ollama/L3 DeepSeek）</div></div>
+      <div class="c"><div class="n">5+</div><div class="l">每日情报栏目（DDL/官网/赛事/机会/保研）</div></div>
+    </div>
+
+    <h2>一、调研结论速览</h2>
+    <p>你的项目在<strong>「采集—解析—容错—推送」</strong>这条主链路上已经相当成熟：37 个官网栏目、三级抓取兜底（urllib→requests→CDP）、通用+专属双解析器互补、URL 归一化去重、发件账号自动降级、固定模板防漂移——这些在同类个人项目中属于第一梯队，已具备参赛展示的完整度。</p>
+    <p>但对照业界（changedetection.io、Visualping、AI Morning Briefing 流水线）和你的<strong>实际业务目标</strong>（保研/竞赛/就业人群），有明显四类缺口：<strong>① 内容级变更检测缺失</strong>（只检测"新 URL"，检测不到"旧通知被更新"）；<strong>② 去重只做 URL 级、未做语义级</strong>（同事件多院重复发、措辞改写仍算多条）；<strong>③ 推送是"一刀切广播"</strong>（30 人收到完全相同内容，未个性化）；<strong>④ 缺少实时/即时告警通道</strong>（仅每日批处理，保研夏令营开放、报名临近等时效性强的信息被稀释）。</p>
+
+    <div class="box good"><strong>一句话建议</strong>：现有系统已是「好用的工具」，下一步把它做成「懂你的情报产品」——补齐<strong>内容变更检测、语义去重、个性化订阅、实时告警</strong>四块，既是最高价值的工程扩展，也是最利于比赛答辩的差异化创新点。</div>
+
+    <h2>二、现状盘点：已经做对的地方（别动）</h2>
+    <table>
+      <tr><th>能力</th><th>实现位置</th><th>成熟度</th><th>评价</th></tr>
+      <tr><td>三级抓取兜底</td><td><code>fetch_with_fallback()</code></td><td>高</td><td>urllib→requests→CDP/Playwright，SPA 空壳识别、JS-required 兜底页识别都做了，非常扎实</td></tr>
+      <tr><td>通用+专属解析器</td><td><code>extract_items_generic()</code> + <code>extract_for_domain()</code></td><td>高</td><td>不依赖站点模板、按详情页 URL 形态提取，抗模板改版能力强</td></tr>
+      <tr><td>URL 归一化去重</td><td><code>normalize_url()</code></td><td>高</td><td>http/https 合并、主机小写、去端口/斜杠/fragment，已避免 26 组重复</td></tr>
+      <tr><td>发信健壮性</td><td><code>send_daily_intel.py</code></td><td>高</td><td>主备账号自动降级、<code>--test</code> 防误发、重复群发闸、发送日志</td></tr>
+      <tr><td>每日情报模板固化</td><td><code>daily_intel_template.py</code></td><td>高</td><td>JSON→HTML 强制带链接、浅色简洁、lint 把关，根治了色彩漂移/DDL 丢链接</td></tr>
+      <tr><td>多渠道推送底座</td><td><code>hfut_notify.py</code> (apprise)</td><td>中</td><td>200+ 渠道已接入，但<strong>当前每日情报仍走 SMTP，apprise 未打通到情报主链路</strong></td></tr>
+      <tr><td>知识库接口</td><td><code>knowledge_base.py</code> (IMA)</td><td>低</td><td>有同步能力，但检索/问答/与日报联动基本未用起来</td></tr>
+      <tr><td>AI 三层分析</td><td><code>main_controller.py</code> L1/L2/L3</td><td>中</td><td>有降级链，但"分析"主要是规则分类，未做 relevance 打分校准与"为什么重要"编辑句</td></tr>
+    </table>
+
+    <h2>三、已实现功能的优化方向（做精，不动大架构）</h2>
+
+    <h3>3.1 去重升级：URL 级 → 语义级（最高性价比）</h3>
+    <p>现状只靠 <code>normalize_url()</code> 合并同链接。但合工大各学院经常把同一份通知（如校发文件、全校性竞赛）分别挂在多个站点、URL 不同，或同一事件改写标题重发，目前会被记为多条。</p>
+    <ul>
+      <li><strong>两阶段去重</strong>（业界标准做法）：先词法（标题 Jaccard / 标题指纹）快速过滤明显重复，再语义（轻量 embedding 如 <code>bge-small-zh</code> / <code>all-MiniLM</code>，本地跑、零成本）对近 48 小时窗口做余弦相似度 ≥0.82 判重。</li>
+      <li><strong>滚动窗口</strong>：只对最近 N 条比对，避免"同一届赛事每年重发"被误杀。</li>
+      <li><strong>保留权威源</strong>：合并时优先保留研究生院/校主页等权威源，其余作为"同事件其他来源"列出。</li>
+      <li>价值：直接降低日报噪声、提升"今日新增"可信度，也是比赛里能讲清的算法亮点。</li>
+    </ul>
+
+    <h3>3.2 内容级变更检测（最大新增价值）</h3>
+    <p>现状是<strong>列表页增量扫描</strong>：新出现一个 URL 才算"新增"。但大量高价值信息发生在<strong>已存在通知的更新</strong>上——招生简章补报名、截止日期顺延、附件 PDF 替换、名单公示更正。这些目前完全看不到。</p>
+    <ul>
+      <li>对已进入索引的重点通知（保研/竞赛/招生/中标类），<strong>周期性抓取详情页正文做 hash/语义 diff</strong>，检测到实质性变化（非日期戳/广告轮播）时触发"更新提醒"。</li>
+      <li>可借鉴 changedetection.io 的"元素级监控"思路：只比对正文容器，忽略导航/页脚噪声。</li>
+      <li>此能力与"语义去重"共用 embedding/正文抓取基础设施，边际成本低。</li>
+    </ul>
+
+    <h3>3.3 详情页结构化抽取（让情报"说人话"）</h3>
+    <p>现状只抓<strong>标题+日期+链接</strong>。日报里每条都是干巴巴的标题，缺少"为什么和你有关"。业界 AI briefing 流水线的关键一步是<strong>抽取→编辑句</strong>。</p>
+    <ul>
+      <li>对高相关条目，抓取详情页正文，用 LLM 做<strong>结构化抽取</strong>（schema 校验输出）：<code>deadline</code> / <code>object（面向对象：本科生/研究生/某学院）</code> / <code>action_required（要不要报名/提交材料）</code> / <code>contact</code> / <code>one_line_why</code>（一句话为什么重要）。</li>
+      <li>抽取与"推理"分离（prompt 工程铁律）：deadline 只取原文明确写的，不要模型臆造；缺失填 <code>null</code>。</li>
+      <li>抽取出的 <code>deadline</code> 可直接喂给现有 <code>competition_calendar.py</code> 的"还有 N 天"逻辑，让 DDL 块更准。</li>
+    </ul>
+
+    <h3>3.4 第 37 栏目（图书馆）的确定性修复</h3>
+    <p>已知未决：<code>lib.hfut.edu.cn</code> 的 React SPA 在无头 Edge 里始终不挂载（连续两次返回 120KB noscript 兜底页），已排除代理/CDP 端口因素。这是唯一稳定失败的栏目，且对学生价值高（信息素养大赛、培训讲座）。</p>
+    <ul>
+      <li>优先排查：CDP 是否等到了 <code>networkidle</code>/应用挂载（目前 <code>fetch_cdp</code> 靠 <code>domcontentloaded</code>，SPA 可能还没 render 完）；尝试 <code>wait_for_function</code> 等待 <code>document.querySelector('.dbTime')</code> 出现再取 HTML。</li>
+      <li>若 CDP 仍不行，改走 <code>lib.hfut.edu.cn</code> 的接口/SSR 数据（React 应用通常先发 JSON 数据再渲染），直接抓数据包。</li>
+    </ul>
+
+    <h3>3.5 AI 层成本与质量校准</h3>
+    <ul>
+      <li><strong>预过滤省钱</strong>：先用本地 Ollama/规则做"是否值得分析"的廉价判断，只有高相关条目才调云端大模型，与 changedetection 的"像素/hash 预筛→LLM 分析"成本策略一致。</li>
+      <li><strong>打分校准</strong>：relevance score 目前是关键词加权累加，可加"打分示例 + 周度人工抽检"避免阈值漂移（业界强调 calibration 比架构更重要）。</li>
+      <li><strong>本地缓存 embeddings/正文摘要</strong>，避免对未变内容重复调用模型。</li>
+    </ul>
+
+    <h3>3.6 可观测性 & 自愈</h3>
+    <ul>
+      <li>已有 <code>failed_channels</code> 与 <code>send_log.jsonl</code>，建议加一个<strong>轻量健康面板</strong>（本地 HTML）：各栏目近 7 天成功率、覆盖度、失败率，覆盖率跌破阈值时告警。</li>
+      <li><strong>死栏目自动重试+自愈</strong>：目前失败进 <code>hfut_failed_sites.json</code> 下次优先重试，但连续失败无升级通知。</li>
+    </ul>
+
+    <h2>四、可扩展的新功能方向</h2>
+
+    <h3>4.1 个性化订阅（强烈推荐，比赛差异化核心）</h3>
+    <p>现状：30 个收件人收到<strong>完全相同</strong>的邮件。但受众差异极大——保研党只关心夏令营/推免，竞赛党只关心大赛，就业党只关心秋招。业界（MyLuckyUniverse、Rasa.io）一致结论：<strong>个性化投递显著拉高打开率与价值感</strong>。</p>
+    <ul>
+      <li>每位收件人维护兴趣标签（保研/竞赛/就业/学术/奖学金）；日报按标签生成<strong>不同子集</strong>再发送。</li>
+      <li>进阶：基于历史点击/打开行为做协同过滤推荐（参赛加分项）。</li>
+    </ul>
+
+    <h3>4.2 实时/即时告警通道</h3>
+    <p>现状仅每日 08:00 批处理。对时效性极强的信息（夏令营系统开放、报名今晚截止、突发的保研政策），日报节奏太慢。</p>
+    <ul>
+      <li>新增<strong>即时告警</strong>：扫描命中"高优先级 + 新鲜度极高 + 含 deadline 临近"的条目时，<strong>立即</strong>经 apprise 推钉钉/企业微信/WxPusher/Telegram（手机推送打开率远高于邮件）。</li>
+      <li>与现有每日情报<strong>互补不替代</strong>：即时通道管"此刻要行动"，日报管"今日概览"。</li>
+    </ul>
+
+    <h3>4.3 把 apprise 接入情报主链路</h3>
+    <p><code>hfut_notify.py</code> 已封装 200+ 渠道但<strong>没接到每日情报发送</strong>。把 <code>send_daily_intel.py</code> 的 SMTP 投递换成"SMTP 为主 + apprise 为辅"的并行投递，立刻解锁微信/钉钉/飞书订阅，受众面翻倍。</p>
+
+    <h3>4.4 RSS / API 对外暴露</h3>
+    <p>系统本身已成为最全的合工大通知聚合源。可对外提供 <strong>RSS/Atom 或 REST API</strong>，让其他人/其他系统订阅——这本身就是产品化与商业化的入口（参考 link.sc 的 aggregator 架构：canonical_url + sources + category + summary）。</p>
+
+    <h3>4.5 知识库 / RAG 问答激活</h3>
+    <p>IMA 知识库已能同步但没用起来。可做：① 历史通知<strong>语义检索</strong>（"去年保研夏令营什么时候开始的？"）；② 基于全量索引的<strong>对话式查询</strong>；③ 给日报加"相关历史"链接，形成知识连贯性。</p>
+
+    <h3>4.6 附件下载 + OCR 全文</h3>
+    <p>项目已有 <code>ocr_extractor.py</code> 与成本评估文档。可自动下载通知里的 PDF/图片附件并 OCR，实现<strong>正文级全文检索</strong>，对有附件的招生简章、名单公示尤其有用。</p>
+
+    <h3>4.7 可视化 Web 仪表盘</h3>
+    <p>现状是本地 HTML 报告。可加一个<strong>轻量仪表盘</strong>：栏目覆盖趋势图、分类占比、近 30 天通知量热力图、关键词云——既是日常运维工具，也是比赛演示的"系统可视化"亮点。</p>
+
+    <h3>4.8 多校区 / 多校扩展（泛化能力证明）</h3>
+    <p>架构把栏目收敛在 <code>CHANNELS</code> 配置里，理论上可扩展到其他安徽高校或合肥其他单位。参赛时可作为"通用高校情报中台"的泛化论证。</p>
+
+    <h2>五、业界最佳实践对标（可借鉴点）</h2>
+    <table>
+      <tr><th>对标对象</th><th>它的强项</th><th>你能直接借的点</th></tr>
+      <tr><td>changedetection.io</td><td>元素级监控、内容 diff、可视化 diff、Browserless 渲染分离</td><td>①内容级变更检测；②抓取与渲染解耦；③失败自愈</td></tr>
+      <tr><td>Visualping / Distill</td><td>实时告警、指定区域监控、AI 摘要</td><td>即时告警通道、按重要性分级推送</td></tr>
+      <tr><td>AI Morning Briefing 流水线</td><td>gather→filter→synthesise→distribute；打分过滤；"why this matters" 编辑句</td><td>详情页结构化抽取 + 一句人话；relevance 打分前置于 LLM</td></tr>
+      <tr><td>News Aggregator（link.sc/esso）</td><td>两阶段去重（指纹+embedding）、canonical+sources 结构、RSS 优先</td><td>语义去重、对外 RSS、聚类保留多来源</td></tr>
+      <tr><td>Personalised Newsletter（Rasa.io）</td><td>按读者行为个性化投递</td><td>兴趣标签订阅、分群日报</td></tr>
+    </table>
+
+    <h2>六、优先级路线图</h2>
+    <table>
+      <tr><th>优先级</th><th>方向</th><th>具体项</th><th>价值</th><th>工作量</th></tr>
+      <tr><td><span class="tag p0">P0</span></td><td>修复</td><td>图书馆第 37 栏目 CDP 渲染/接口抓取修复</td><td>补全覆盖盲区</td><td>小</td></tr>
+      <tr><td><span class="tag p0">P0</span></td><td>新增</td><td>语义去重（两阶段，本地 embedding）</td><td>降噪、提准、算法亮点</td><td>中</td></tr>
+      <tr><td><span class="tag p0">P0</span></td><td>新增</td><td>个性化订阅（按兴趣标签分群投递）</td><td>体验跃升、比赛差异化</td><td>中</td></tr>
+      <tr><td><span class="tag p1">P1</span></td><td>新增</td><td>内容级变更检测（重点通知详情页 diff）</td><td>捕捉"更新"，最高新增价值</td><td>中</td></tr>
+      <tr><td><span class="tag p1">P1</span></td><td>新增</td><td>即时告警通道（apprise 接高频条目）</td><td>时效性信息不漏</td><td>小</td></tr>
+      <tr><td><span class="tag p1">P1</span></td><td>优化</td><td>详情页结构化抽取 + DDL 校正</td><td>情报"说人话"</td><td>中</td></tr>
+      <tr><td><span class="tag p2">P2</span></td><td>新增</td><td>RSS/API 对外暴露</td><td>产品化/商业化入口</td><td>中</td></tr>
+      <tr><td><span class="tag p2">P2</span></td><td>新增</td><td>知识库 RAG 问答激活</td><td>历史检索、对话式</td><td>中</td></tr>
+      <tr><td><span class="tag p2">P2</span></td><td>新增</td><td>Web 可视化仪表盘</td><td>运维 + 演示亮点</td><td>中</td></tr>
+      <tr><td><span class="tag p2">P2</span></td><td>优化</td><td>AI 层成本校准 + 正文缓存</td><td>降本</td><td>小</td></tr>
+    </table>
+
+    <div class="box warn"><strong>落地顺序建议</strong>：先修图书馆（P0 小修）→ 语义去重（与变更检测共用正文抓取底座，先铺）→ 个性化订阅（改动发送层，收益最直观）。这三步不动主架构、风险低、答辩好讲。即时告警与变更检测作为第二阶段亮点。</div>
+
+    <h2>七、给「中国国际大学生创新大赛」的包装建议</h2>
+    <ul>
+      <li><strong>定位</strong>：从"爬虫脚本"升维到"面向高校学生的智能情报中台 / 信息差消除平台"。</li>
+      <li><strong>创新点</strong>：① 三级容错抓取（抗 SPA/反爬/证书问题）；② 通用+专属双解析器（抗站点改版）；③ 语义级去重与变更检测（NLP 亮点）；④ 个性化订阅 + 即时告警（产品亮点）；⑤ 0 Token 纯脚本日报（成本亮点）。</li>
+      <li><strong>数据资产</strong>：已沉淀约 1020 条通知索引 + 30 人真实用户 + 连续每日运行，这是最有说服力的"已落地"证据。</li>
+      <li><strong>可延展商业模型</strong>：RSS/API 开放、跨校复制、付费个性化推送——呼应你已有的「商业化可行性调研报告」。</li>
+    </ul>
+
+    <div class="box"><strong>下一步</strong>：本调研为方向与优先级判断，未改动任何代码。若确认启动某一项（建议从 P0 的语义去重或图书馆修复入手），可让我直接给出落地实现方案与代码。</div>
+
+  </div>
+  <div class="foot">合工大每日情报 · 深度调研报告 · 2026-09-27 · 由 WorkBuddy 生成（基于项目源码审阅 + 业界最佳实践联网调研）</div>
+</div>
+</body>
+</html>

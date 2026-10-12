@@ -4,7 +4,7 @@
   <img src="https://img.shields.io/badge/Python-3.13-blue.svg" alt="Python">
   <img src="https://img.shields.io/badge/Platform-Windows-lightgrey.svg" alt="Platform">
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
-  <img src="https://img.shields.io/badge/code-22%2C083%20lines-orange.svg" alt="Lines">
+  <img src="https://img.shields.io/badge/code-31%2C310%20lines-orange.svg" alt="Lines">
 </p>
 
 <p align="center">
@@ -34,11 +34,17 @@
 | 指标 | 数值 |
 |---|---|
 | 归档条目 | **257** 条 |
-| 核心采集/处理模块 | **34** 个 Python 脚本 |
-| 自研代码总量 | **22,083** 行（42 个文件，不含第三方依赖） |
+| 自研代码总量 | **31,310** 行（74 个 Python 文件，不含第三方依赖） |
+| 核心采集/处理模块（`scripts/`） | **41** 个 Python 脚本 / 21,657 行 |
 | 归档体积 | 145 KB |
 | 数据时间跨度 | 2016-12-26 ~ 2026-06-08 |
 | 归档最后更新 | 2026-06-09 09:30 |
+
+> **口径说明（对外材料一律用「自研代码总量」，勿混用）**
+>
+> - **31,310 行 / 74 个文件 = 全项目自研 Python 实测总量**，覆盖 `scripts/`（采集处理层）+ `hfut_site/`（官网巡检子系统）+ 根入口 + 测试 + 语音助手等；**BP / PPT / 答辩材料统一用这个口径**。
+> - **21,657 行 / 41 个文件**是其中 `scripts/` 的**子集**，只代表采集处理层，不是全项目代码量。
+> - 本表数字与对外材料**同源**：均由 `python scripts/stats_report.py` 实时输出，改代码后重跑即可刷新；构成明细见 `docs/参赛材料/运行证据/代码构成明细.md`。
 
 **各渠道采集量**
 
@@ -166,7 +172,7 @@ QQ 邮箱授权码：邮箱网页版 → 设置 → 账户 → 开启 IMAP/SMTP 
 
 ```bash
 # 完整巡检（采集 → 过滤 → 归档 → 推送）
-python scripts/main.py
+python hfut.py all
 
 # 单独跑官网采集
 python scripts/hfut_web_scraper.py
@@ -188,8 +194,9 @@ Windows 任务计划程序：触发器「每天 08:00」→ 程序 `python.exe` 
 
 ```
 hfut_info_monitor/
-├── scripts/                      # 核心模块（34 个）
-│   ├── main.py                   # 主入口，编排全流程
+├── hfut.py                       # 统一入口 v5.0（scan/report/status/kb/all/bootstrap）
+├── scripts/                      # 采集处理层（41 个自研 py 脚本）
+│   ├── hfut_web_scraper.py       # 官网爬虫（1,277 行）
 │   ├── hfut_web_scraper.py       # 官网爬虫（1,277 行）
 │   ├── qq_group_scraper.py       # QQ 群采集（1,405 行，最大模块）
 │   ├── qzone_scraper.py          # QQ 空间采集（1,249 行）
@@ -215,7 +222,7 @@ hfut_info_monitor/
 
 | 需求 | 入口 |
 |---|---|
-| 跑一次完整巡检 | `scripts/main.py` |
+| 跑一次完整巡检 | `python hfut.py all` |
 | 只要官网数据 | `scripts/hfut_web_scraper.py` |
 | 调试采集降级链 | `scripts/qzone_friend_feed.py` |
 | 改过滤规则 | `scripts/filter.py` + `config.filter_rules` |

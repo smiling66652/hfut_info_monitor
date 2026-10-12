@@ -202,6 +202,15 @@ hfut_site/hfut_scan_log.json
 hfut_site/hfut_failed_sites.json
 hfut_site/hfut_report.html
 hfut_site/hfut_daily_summary.html
+hfut_site/daily_intel_tmp.html
 hfut_site/__pycache__/
 # 邮件凭据：含 QQ SMTP 明文授权码，绝不入库（优先改用环境变量）
 hfut_site/hfut_email_config.json
+# 多渠道推送凭据：apprise URL 内含钉钉/企微/PushDeer 等密钥，绝不入库
+# 模板见 hfut_site/hfut_notify_config.example.json
+hfut_site/hfut_notify_config.json
+
+# 原始抓取 dump（docs/_raw_20260922/）：3.6MB 一次性探测产物，本地保留即可
+docs/_raw_20260922/
+# Windows 设备文件事故产生的垃圾文件（Python 把 nul 当路径写出来的残留）
+__nul_device_file_*.txt

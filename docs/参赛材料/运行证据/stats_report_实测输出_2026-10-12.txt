@@ -1,0 +1,21 @@
+# stats_report.py 实测输出（P4 页数据同源证据）
+# 生成命令：.venv/Scripts/python.exe scripts/stats_report.py
+# 生成时间：2026-10-12
+# 统计口径：全项目自研 .py（排除 .venv / __pycache__ / node_modules / NapCat / go-cqhttp / .git）
+# 说明：本文件内容为脚本原始输出，未做任何删改，用于幻灯片数字与截图逐字核对
+
+归档条目总数: 257
+字段: archive_time, content, is_important, keywords, source, time, title, url
+
+按 source 分布（5 类）:
+  本部-新闻要闻                      108
+  本部-通知公告                      80
+  wechat_official              41
+  宣城校区-校区新闻                    26
+  宣城校区-通知公告                    2
+
+日期范围: 2016-12-26 ~ 2026-06-08
+
+scripts 下 py 文件: 41 个，合计 21657 行
+项目自研 py 文件: 74 个，合计 31310 行
+归档最后更新: 2026-06-09 09:30

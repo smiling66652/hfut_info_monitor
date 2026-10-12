@@ -5,7 +5,24 @@
 import sys, io, json, os
 from datetime import datetime
 
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+def _ensure_utf8_console():
+    """把控制台编码调成 UTF-8 —— 但**不替换** sys.stdout/stderr 对象。
+
+    原实现 `sys.stdout = io.TextIOWrapper(sys.stdout.buffer, ...)` 会劫持全局流：
+    它把宿主（pytest / IDE / 任何 import 本模块的程序）的 stdout 换成包在其 buffer
+    之上的新包装器；宿主随后关闭自己的捕获缓冲，本模块的包装器就指向已关闭的资源 →
+    宿主进程抛 `ValueError: I/O operation on closed file`（pytest 下表现为收集阶段直接崩溃）。
+    改用 reconfigure() 原地改编码，对象不变，对宿主零副作用。
+    """
+    for _name in ("stdout", "stderr"):
+        _s = getattr(sys, _name, None)
+        try:
+            _s.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass          # 宿主流无 reconfigure（如 StringIO）→ 保持原样即可
+
+
+_ensure_utf8_console()
 
 INDEX_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "hfut_full_index.json")
 OUTPUT_HTML = os.path.join(os.path.dirname(os.path.abspath(__file__)), "hfut_report.html")
@@ -84,7 +101,7 @@ max_dt_count = max(date_count.values()) if date_count else 1
 for month in sorted_months:
     cnt = date_count.get(month, 0)
     pct = int(cnt / max_dt_count * 100)
-    timeline_bars += f'<div class="tl-col"><div class="tl-bar" style="height:{max(pct, 4)}%" title="{month}: {cnt}条"></div><div class="tl-label">{month[5:]}</div></div>\n'
+    timeline_bars += f'<div class="tl-col"><div class="tl-bar" style="height:{max(pct, 4)}%" title="{escape(month)}: {cnt}条"></div><div class="tl-label">{month[5:]}</div></div>\n'
 
 # 生成条目HTML
 items_html = ""
@@ -106,12 +123,13 @@ for idx, item in enumerate(items_filtered):
     tag_icon = type_icons.get(tp, "📄")
     
     title = escape(item.get("title", "无标题"))
-    date = item.get("date", "")
+    raw_date = item.get("date", "")
+    date = escape(raw_date)
     channel = escape(item.get("channel", ""))
-    url = item.get("url", "#")
-    
-    # 判断是否最近7天
-    is_recent = date >= week_ago
+    url = escape(item.get("url", "#"))   # B6: url 插入 href/data-* 必须转义，否则 &/" 撑坏排版
+
+    # 判断是否最近7天（用原始日期比较，避免转义字符干扰）
+    is_recent = raw_date >= week_ago
     
     items_html += f"""
         <a class="notice-item{' new-item' if is_recent else ''}" href="{url}" target="_blank" 
@@ -287,7 +305,7 @@ body{{
     <div class="header">
         <h1>合工大官网信息扫描报告</h1>
         <div class="subtitle">覆盖 {len(channel_count)} 个栏目 · 智能筛选高相关度信息 · 自动化每日巡检</div>
-        <div class="time">报告生成：{gen_time} ｜ 上次扫描：{last_scan}</div>
+        <div class="time">报告生成：{gen_time} ｜ 上次扫描：{escape(last_scan)}</div>
         <div class="badge">{'🆕 近7天新增 ' + str(len(recent_high)) + ' 条高相关度' if recent_high else '✓ 系统运行正常'}</div>
     </div>
     

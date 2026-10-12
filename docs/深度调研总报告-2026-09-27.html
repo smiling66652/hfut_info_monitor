@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>合工大信息巡检系统 · 深度调研总报告（架构·优化·扩展·对标）</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family:"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;
+         background:#eef2f7; color:#1f2937; margin:0; padding:28px 14px; line-height:1.72; }
+  .container { max-width:1040px; margin:0 auto; background:#fff; border-radius:16px;
+               box-shadow:0 6px 28px rgba(15,23,42,.10); overflow:hidden; }
+  .header { background:linear-gradient(120deg,#1e3a8a,#2563eb); color:#fff; padding:28px 32px 24px; }
+  .header h1 { margin:0 0 6px; font-size:25px; font-weight:700; letter-spacing:.5px; }
+  .header .sub { font-size:13px; opacity:.9; }
+  .body { padding:22px 32px 36px; }
+  h2 { font-size:20px; margin:34px 0 12px; padding:10px 0 8px; border-bottom:2px solid #e2e8f0; color:#0f172a; }
+  h2 .num { color:#2563eb; font-weight:800; margin-right:8px; }
+  h3 { font-size:16.5px; margin:22px 0 8px; color:#1d4ed8; }
+  h3 .sev { font-size:11px; padding:1px 7px; border-radius:9px; font-weight:700; margin-left:8px; vertical-align:middle; }
+  p { margin:8px 0; font-size:14.5px; }
+  ul, ol { font-size:14.5px; padding-left:22px; }
+  li { margin:5px 0; }
+  table { width:100%; border-collapse:collapse; margin:14px 0; font-size:13.5px; }
+  th, td { border:1px solid #e5e7eb; padding:8px 10px; text-align:left; vertical-align:top; }
+  th { background:#f1f5f9; color:#0f172a; font-weight:600; }
+  tr:nth-child(even) td { background:#fafcff; }
+  code { background:#f1f5f9; padding:1px 5px; border-radius:4px; font-size:12.5px; color:#be123c; }
+  .tag { display:inline-block; font-size:11.5px; padding:1px 8px; border-radius:10px; font-weight:600; }
+  .p0 { background:#fee2e2; color:#b91c1c; }
+  .p1 { background:#fef3c7; color:#b45309; }
+  .p2 { background:#dcfce7; color:#15803d; }
+  .box { border-left:4px solid #6366f1; background:#f8fafc; padding:12px 16px; border-radius:0 10px 10px 0; margin:14px 0; }
+  .box.warn { border-left-color:#f59e0b; }
+  .box.good { border-left-color:#10b981; }
+  .box.crit { border-left-color:#dc2626; background:#fef2f2; }
+  .muted { color:#64748b; font-size:13px; }
+  .kpi { display:flex; gap:12px; flex-wrap:wrap; margin:16px 0; }
+  .kpi .c { background:#f6f9fd; border:1px solid #e5edf7; border-radius:12px; padding:13px 16px; min-width:118px; }
+  .kpi .n { font-size:21px; font-weight:700; color:#1d4ed8; }
+  .kpi .l { font-size:11.5px; color:#64748b; }
+  .toc { background:#f8fafc; border:1px solid #e5edf7; border-radius:12px; padding:14px 20px; margin:14px 0 4px; }
+  .toc a { color:#1d4ed8; text-decoration:none; }
+  .toc a:hover { text-decoration:underline; }
+  .foot { border-top:1px solid #eef2f7; padding:16px 32px; color:#64748b; font-size:12.5px; }
+  .mono { font-family:"SFMono-Regular",Consolas,Menlo,monospace; font-size:12.5px; }
+  .fileref { color:#475569; font-size:12.5px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>合工大信息巡检系统 · 深度调研总报告</h1>
+    <div class="sub">统一巡检系统 v5.1 · 调研日期 2026-09-27 · 面向「2026 中国国际大学生创新大赛」主线项目<br>
+    范围：已实现功能优化（技术债/可靠性审计）+ 可扩展新功能 + 外部最佳实践对标 + 整合路线图</div>
+  </div>
+  <div class="body">
+
+    <div class="box">
+      <strong>本报告与既有文档的关系</strong>：今日已有《功能扩展与优化调研-2026-09-27.html》从<strong>产品视角</strong>梳理了新功能方向。
+      本报告在其基础上<strong>补齐两块缺失的拼图</strong>：① 对<strong>已上线代码</strong>做逐文件的技术债/可靠性审计（即"已实现功能还能怎么优化"）；
+      ② 对 <strong>changedetection.io 与外部监控最佳实践</strong>做深挖，给出可直接借鉴的具体技术。最后给出<strong>整合优先级路线图</strong>。
+      凡引用既有文档的结论均注明出处，不重复造轮子。
+    </div>
+
+    <div class="toc">
+      <strong>目录</strong><br>
+      <a href="#s0">〇、执行摘要</a> · <a href="#s1">一、现状架构快照（实测校正）</a> ·
+      <a href="#s2">二、已实现功能的优化方向（代码级审计）</a> · <a href="#s3">三、可扩展新功能（产品维度）</a> ·
+      <a href="#s4">四、外部最佳实践对标（changedetection.io 深挖）</a> · <a href="#s5">五、整合优先级路线图</a> ·
+      <a href="#s6">六、比赛包装建议</a> · <a href="#s7">附录：待清理死代码清单</a>
+    </div>
+
+    <h2 id="s0"><span class="num">〇</span>执行摘要</h2>
+    <div class="kpi">
+      <div class="c"><div class="n">37</div><div class="l">官网栏目（CHANNELS，含 1 个已知失败：图书馆）</div></div>
+      <div class="c"><div class="n">3</div><div class="l">抓取引擎层级（urllib→requests→CDP/Playwright）</div></div>
+      <div class="c"><div class="n">2</div><div class="l">并行产品线（v4 自动巡检 / 每日情报子系统）</div></div>
+      <div class="c"><div class="n">~19</div><div class="l">scripts 模块（活跃 ~15 / 遗留未接入 ~12）</div></div>
+      <div class="c"><div class="n">P0×3</div><div class="l">本次新发现的代码级高危项</div></div>
+    </div>
+    <p><strong>已经做对的地方（勿动）</strong>：三级抓取兜底（含 SPA 空壳识别、JS-required 兜底页识别）、通用+专属双解析器（抗站点改版）、URL 归一化去重、发信账号自动降级与防误发闸门、每日情报模板固化（强制带链接+浅色简洁）、apprise 多渠道底座、AI 三层分析降级链。这套主链路在同类个人项目中属第一梯队。</p>
+    <p><strong>四大业务缺口</strong>（源自既有文档，已确认）：① 内容级变更检测缺失；② 去重只做 URL 级；③ 推送一刀切广播；④ 缺少实时告警。</p>
+    <p><strong>本次新增发现（代码级）</strong>：<span class="tag p0">P0</span> 无内容哈希兜底 + <code>load_index()</code> 静默重置 → <strong>索引损坏会触发全量重推</strong>；<span class="tag p0">P0</span> 变更检测停留在 URL 级（无正文 diff、无历史快照）；<span class="tag p0">P0</span> 分类体系三处重复且口径矛盾；外加 12 个遗留/未接入模块、并发无锁、硬编码密钥路径等可维护性债务。</p>
+    <div class="box crit"><strong>一句话定位</strong>：现有系统已是"好用的工具"，下一步把它做成"懂你的情报产品"——同时把"脆弱的脚本"加固成"可演示、不出事故的系统"。前者靠 3.1–3.5 的新功能，后者靠第二章的 P0 加固。</div>
+
+    <h2 id="s1"><span class="num">一</span>现状架构快照（实测校正）</h2>
+    <p>对 <code>hfut.py</code> → <code>main_controller.py</code> → <code>task_orchestrator.py</code> 与 <code>hfut_site/</code> 核心模块的源码审阅结论（非仅读文档）：</p>
+    <table>
+      <tr><th>维度</th><th>实测情况</th><th>备注</th></tr>
+      <tr><td>入口</td><td><code>hfut.py</code> 分发 <code>scan/report/status/kb</code> 给 <code>hfut_cli</code>；<code>all</code> 给 <code>main_controller --mode all</code></td><td>v5 入口，清晰</td></tr>
+      <tr><td>官网扫描</td><td><code>hfut_site/hfut_scanner.py</code>（2073 行单体），<code>CHANNELS</code> 实测 <strong>37</strong> 条（新闻网/研院/教务/团委/科研/社科/各学院/图书馆/招标/就业/宣城…）</td><td>既有文档"37 栏目"准确</td></tr>
+      <tr><td>抓取引擎</td><td><code>fetch_with_fallback()</code>：urllib → requests+bs4 → CDP 直连 Edge → Playwright 四级兜底</td><td>扎实；SPA 空壳识别 <code>_looks_like_js_shell</code></td></tr>
+      <tr><td>解析</td><td>专属提取器（zb/lib/xc）+ 通用 <code>extract_items_generic()</code>（按详情页 URL 形态提取，抗模板改版）</td><td>设计良好</td></tr>
+      <tr><td>主流程协作</td><td>模块间几乎全为 <strong>in-process import</strong> 调用；跨步骤数据靠 <code>data/*.json</code> 文件中转</td><td>无消息队列，简单但紧耦合</td></tr>
+      <tr><td>两条产品线</td><td>① v4 自动巡检（<code>task_orchestrator</code> 编排采集/AI/摘要/同步）；② "每日情报"子系统（<code>opportunity_pick / competition_calendar / send_daily_intel / daily_intel_template / manage_recipients</code>）</td><td class="fileref"><strong>② 未挂入 main_controller 自动流水线</strong>，需另行调度</td></tr>
+    </table>
+    <div class="box warn"><strong>关键事实</strong>：<code>hfut_notify.py</code>（apprise，200+ 渠道）经全仓 grep 确认<strong>除自身外无任何模块 import 它</strong>——多通道能力是"孤儿模块"，当前每日情报仍只走 SMTP。这是第三章 3.5 要打通的关键。</div>
+
+    <h2 id="s2"><span class="num">二</span>已实现功能的优化方向（代码级审计）</h2>
+    <p class="muted">以下为对 <code>hfut_site/</code> 与 <code>scripts/</code> 逐文件审计结果，每条附 file:line，供直接落地。既有文档未覆盖此层。</p>
+
+    <h3>2.1 数据安全：无内容哈希兜底 + 索引静默重置 <span class="sev p0">P0</span></h3>
+    <p><code>hfut_scanner.py:1820-1821</code> 的新增判定仅基于 <code>normalize_url(url)</code>（<code>item_key</code> 见 :175-197，只归一化协议/主机/端口/斜杠/fragment，<strong>不含 title/date/正文</strong>）。而 <code>load_index()</code>（:1776-1780）<strong>无任何 try/except</strong>：一旦 <code>hfut_full_index.json</code> 损坏/被清空，立即静默重置为 <code>[]</code>。</p>
+    <div class="box crit"><strong>事故场景</strong>：索引损坏 → 全部历史 URL 判定为"新增" → <strong>海量重复推送轰炸 30 人</strong>。当前无任何内容哈希作兜底。这是最该先修的可靠性黑洞。</div>
+    <ul>
+      <li>新增<strong>内容指纹</strong>：对每条持久化 <code>content_hash(url+title+date)</code>（<code>hashlib</code> 已在 :28 导入却从未用于 diff）；</li>
+      <li><code>load_index/load_state/load_failed_sites</code> 统一包 <code>safe_load_json(path, default)</code>，损坏时<strong>告警并保留上次快照</strong>，绝不静默 <code>[]</code>；</li>
+      <li>建独立"已推送 URL 集合"去重表，与索引解耦。</li>
+    </ul>
+
+    <h3>2.2 变更检测停留在 URL 级 <span class="sev p0">P0</span></h3>
+    <p>系统是<strong>列表页增量扫描</strong>：URL 新出现才算"新增"。但大量高价值动作发生在<strong>已存在通知的更新</strong>——招生简章补报名、截止日期顺延、附件 PDF 替换、名单公示更正。这些当前<strong>完全不可见</strong>。</p>
+    <ul>
+      <li>对已进入索引的重点通知（保研/竞赛/招生/中标类），<strong>周期性抓取详情页正文做 hash/语义 diff</strong>；</li>
+      <li>哈希变化 → 标记"已更新"并推送变更摘要（与 3.1 共用正文抓取底座）；</li>
+      <li>补<strong>逐条历史快照</strong>（按 URL 存 N 个版本），支持"上周这通知长什么样"回看。</li>
+    </ul>
+
+    <h3>2.3 三套分类体系重复且矛盾 <span class="sev p1">P1</span></h3>
+    <p>分类逻辑被三处重复实现，且口径互相打架：</p>
+    <ul>
+      <li><code>hfut_config.classify_hfut()</code>（:61-77，中文类目，<strong>含"教务"</strong>）；</li>
+      <li><code>hfut_scanner.score_item + categorize_item</code>（:1387-1408，<strong>英文类目，无"教务"</strong>）；</li>
+      <li><code>HIGH_PRIORITY_KEYWORDS / RELATED_KEYWORDS</code>（:396-433，独立关键词表）。</li>
+    </ul>
+    <p>后果：索引存英文 <code>category</code>，邮件/CLI 又用 <code>classify_hfut()</code> 按中文重分类，"教务"通知在索引里是 <code>other</code>、在邮件里却标"教务"，每日摘要按英文分组 → 教务落入"其他"桶。<strong>建议只保留一套权威分类（推荐 <code>hfut_config</code> 为权威），索引存中文类目，报告直接读索引，删掉 <code>categorize_item</code>。</strong></p>
+
+    <h3>2.4 多通道未接入主链路 + 无跨账号 failover <span class="sev p1">P1</span></h3>
+    <p><code>hfut_notify.py</code>（apprise 200+ 渠道）是孤儿模块（见 1 节）。<code>hfut_email.send_email()</code>（:348-401）仅做<strong>同账号 465→587 降级</strong>，<strong>无"主账号失败切备用账号"、无"切企微/钉钉"</strong>。一旦 SMTP 授权码失效，整条推送链静默全挂。</p>
+    <ul>
+      <li>在 <code>send_email_report()</code> 成功/失败后调用 <code>hfut_notify.push()</code> 作备用通道，或做成策略链（SMTP 失败 → apprise）；</li>
+      <li>支持主/备 SMTP 账号、多收件人组，任一路成功即返回。</li>
+    </ul>
+
+    <h3>2.5 状态文件读取无异常保护 <span class="sev p1">P1</span></h3>
+    <p><code>load_index()</code>（:1776）、<code>load_state()</code>（:1766）、<code>load_failed_sites()</code>（:902）均无 try/except，而 <code>save_scan_log</code>（:1742）反而有——不一致。<strong>统一 <code>safe_load_json()</code></strong>（与 2.1 同改）。</p>
+
+    <h3>2.6 <code>_url_cache</code> 跨线程无锁 <span class="sev p1">P1</span></h3>
+    <p><code>_url_cache</code> 定义于 :119，被 <code>fetch()</code>（:535）与 <code>fetch_requests_bs4()</code>（:578）多线程并发读写（<code>ThreadPoolExecutor(max_workers=6)</code>，:1906）。<strong>数据竞争</strong>风险。改用 <code>threading.Lock</code> 包裹，或直接用 <code>functools.lru_cache</code>/requests 自带缓存。</p>
+
+    <h3>2.7 巨型单体 + print 调试 + 无日志框架 <span class="sev p1">P1</span></h3>
+    <p><code>hfut_scanner.py</code> 2073 行混合抓取/解析/评分/IO/HTML 生成/编排，全程 <code>print</code>（:386,567,661…）。建议拆分为 <code>fetcher / parser / classifier / state / report</code> 子模块；引入 <code>logging</code> 分级（DEBUG/INFO/WARN/ERROR），CLI 摘要与日志分离。</p>
+
+    <h3>2.8 硬编码绝对路径/密钥 <span class="sev p2">P2</span></h3>
+    <p><code>_NODE_EXE</code>（:665，写死 <code>C:\Users\Matebook\.workbuddy\binaries\node\...</code>）、Edge 路径（:708-710）。改环境变量 / <code>shutil.which("node")</code> 优先，探测失败给可读错误。<strong>可移植性与换机部署</strong>直接相关（比赛演示常换环境）。</p>
+
+    <h3>2.9 收件人邮箱硬编码于源码 <span class="sev p2">P2</span></h3>
+    <p><code>hfut_email.py</code> 中 5 个真实 QQ 号重复出现于 :13 / :422 / :499 等多处。仅保留在 <code>hfut_email_config.json</code>，源码/文档用占位符。</p>
+
+    <h3>2.10 重复代码块 <span class="sev p2">P2</span></h3>
+    <p><code>_try_smtp</code> 在 <code>_send_plain_email</code> 与 <code>send_email</code> 各定义一次（:319-335 / :370-386）；<code>extract_items_standard</code> 与 <code>extract_items_news_cms</code> 近逐行相同（:913-958）；<code>_ensure_utf8_console</code> 在 4 个文件各抄一份（注释自认 :69）。抽取公共工具模块。</p>
+
+    <h3>2.11 索引无上限增长 <span class="sev p2">P2</span></h3>
+    <p><code>existing_index.extend(...)</code> 后整文件写回（:1986-1988），无归档/裁剪 → <code>hfut_full_index.json</code> 已 328KB 且持续膨胀。保留近 N 天或按 URL 去重后限长，冷数据归档。</p>
+
+    <h3>2.12 TLS 全局关闭 <span class="sev p2">P2</span></h3>
+    <p><code>SSL_CTX.verify_mode = ssl.CERT_NONE</code>（:91）；<code>requests verify=False</code>（:597）。对已知内网证书链问题站点白名单放行，其余恢复校验（安全与合规前置，呼应商业化报告）。</p>
+
+    <h3>2.13 <code>new_count</code> 口径不一致 <span class="sev p2">P2</span></h3>
+    <p>CLI 用 <code>len(index)-count_before</code>（URL 级，:256）；邮件用 <code>date == today</code>（日期级，:158）。二者可能不符，"今日新增 N 条"数字与列表对不上。统一以"本扫描周期新增 URL 集合"为准。</p>
+
+    <h3>2.14 HTML 注入 / 转义缺失 <span class="sev p2">P2</span></h3>
+    <p><code>build_html_report()</code> 标题/URL 直接 f-string 注入（:126-147），仅摘要页转义。所有用户可控字段统一 <code>html.escape</code>，防排版破损（标题含 <code>&</code> 等已实测会断行）。</p>
+
+    <h3>2.15 死代码 / 冗余模块清理清单 <span class="sev p2">P2</span></h3>
+    <p>下述模块经 grep 确认<strong>零 import（仅自身引用）或未接入主流程</strong>，属可删/可合并（详见附录）：<code>main.py</code>(1174)、<code>qq_group_scraper.py</code>(1405)、<code>qzone_scraper.py</code>(1249)、<code>wechat_article_scraper.py</code>(1189)、<code>wechat_monitor_enhanced.py</code>(241)、<code>notion_manager.py</code>(475,已禁用)、<code>data_sync.py</code>(436)、<code>storage_manager.py</code>(594)、<code>fault_tolerance.py</code>(711)、<code>ocr_extractor.py</code>(937)、<code>playwright_scraper.py</code>(625)、<code>qq_group_collector.py</code>(623)。清理后仓库体积与认知负担大幅下降。</p>
+
+    <h3>2.16 <code>smart_digest</code> 与 <code>daily_digest_v2</code> 重复触发 <span class="sev p1">P1</span></h3>
+    <p>二者都在 <code>all</code> 模式触发（<code>task_orchestrator</code> 与 <code>run_all_mode</code> 收尾），功能高度重叠，<strong>存在重复发信风险</strong>。二选一作为唯一摘要入口，或明确分工（一个即时、一个每日）。</p>
+
+    <h3>2.17 <code>wechat_monitor</code> 已弃用但仍被触发 <span class="sev p2">P2</span></h3>
+    <p>文件头标 DEPRECATED，却被 <code>ai_secretary.run_secretary()</code> 兜底分支在运行时触发 → 微信被<strong>弃用模块重复采集</strong>。建议从主流程去掉该兜底或直接删除 <code>wechat_monitor</code>，统一走 <code>wechat_account_monitor</code>。</p>
+
+    <h3>2.18 每日情报子系统未接入自动流水线 <span class="sev p1">P1</span></h3>
+    <p><code>opportunity_pick / competition_calendar / send_daily_intel / daily_intel_template / manage_recipients</code> 能独立跑，但<strong>没挂进 <code>main_controller</code> 自动每日流水线</strong>。若这是当前主推产品，应接入 <code>task_orchestrator</code> 取代/整合旧 <code>smart_digest</code> 路线，保证"到时自动发"。</p>
+
+    <h3>2.19 测试覆盖缺口 <span class="sev p2">P2</span></h3>
+    <p>纯函数单测较全（normalize_url/score_item/extract_*/generate_daily_summary 等约 60 用例）；但<strong>未覆盖</strong>：① 网络抓取 <code>fetch/fetch_with_fallback</code>；② 扫描编排 diff/去重/并发；③ <code>load_index</code> 损坏恢复；④ <code>build_html_report</code>；⑤ <code>_url_cache</code> 线程安全；⑥ 内容变更检测（当前不存在）。<strong>补"索引损坏→不重推"与"同 URL 内容变更→标更新"两条回归用例</strong>，直接护住 2.1/2.2。</p>
+
+    <h2 id="s3"><span class="num">三</span>可扩展新功能（产品维度）</h2>
+    <p class="muted">本节约等于既有《功能扩展与优化调研》的"新功能"部分，但补充了<strong>具体借鉴技术</strong>（与第四章对标呼应）。优先级与排期见第五章。</p>
+
+    <h3>3.1 内容级变更检测（最高新增价值）<span class="sev p1">P1</span></h3>
+    <p>借用监控最佳实践：①<strong>MD5 短路</strong>——抓完先算 MD5 与上次比对，一样直接跳过解析（省 ~90% 无效处理，约 20 行改动）；②<strong>DOM 降噪</strong>——比对前清洗动态类名/CSRF Token/时间戳（业界用 AST 级清洗把误报率从 95% 降到个位数）；③<strong>段落级 diff + ignore_junk</strong>——只比对正文容器，忽略计数器/广告轮播；④<strong>差异摘要</strong>——用 difflib 生成人读 unified_diff 或让 LLM 改写"截止日期由 X 改为 Y"。</p>
+
+    <h3>3.2 语义级去重（最高性价比）<span class="sev p0">P0</span></h3>
+    <p>现状只 <code>normalize_url()</code> 合并同链接。两阶段去重（业界标准）：先<strong>标题指纹</strong>（Jaccard/SimHash）快速过滤，再<strong>轻量 embedding</strong>（<code>bge-small-zh</code>/<code>all-MiniLM</code>，本地零成本）对近 48h 窗口做余弦相似度 ≥0.82 判重。滚动窗口避免"同届赛事每年重发"被误杀；合并时保留研究生院/校主页等权威源。</p>
+
+    <h3>3.3 详情页结构化抽取 + DDL 倒计时 <span class="sev p1">P1</span></h3>
+    <p>对高相关条目抓详情页正文，LLM 做 schema 校验抽取：<code>deadline / object / action_required / contact / one_line_why</code>。抽取与推理分离（deadline 只取原文，缺失填 <code>null</code>）。抽出的 <code>deadline</code> 直接喂 <code>competition_calendar.py</code> 的"还有 N 天"逻辑——学生最痛的"错过 DDL"点，已被竞品（保研机构）验证为付费意愿最强的功能。</p>
+
+    <h3>3.4 个性化订阅（比赛差异化核心）<span class="sev p0">P0</span></h3>
+    <p>现状 30 人收完全相同邮件。每位收件人维护兴趣标签（保研/竞赛/就业/学术/奖学金），日报按标签生成<strong>不同子集</strong>投递；进阶做基于打开/点击行为的协同过滤。改动发送层、收益最直观。</p>
+
+    <h3>3.5 实时/即时告警 + apprise 接入主链路 <span class="sev p1">P1</span></h3>
+    <p>现状仅每日 08:00 批处理。对"夏令营系统开放 / 报名今晚截止 / 突发保研政策"等时效性极强信息，扫描命中"高优先级+新鲜度极高+含临近 deadline"时<strong>立即</strong>经 apprise 推钉钉/企微/WxPusher/Telegram（手机推送打开率远高于邮件）。与日报互补不替代。先把孤儿模块 <code>hfut_notify.py</code> 接进 <code>send_email_report()</code>（改动小、立刻解锁微信推送）。</p>
+
+    <h3>3.6 附件下载 + OCR 全文 <span class="sev p2">P2</span></h3>
+    <p><code>ocr_extractor.py</code> 已就绪；自动下载 PDF/图片附件 OCR（本地 PaddleOCR 边际成本≈0，云端仅兜底），实现正文级全文检索，对招生简章/名单公示尤其有用。</p>
+
+    <h3>3.7 RSS / API 对外暴露 <span class="sev p2">P2</span></h3>
+    <p>系统已是最全的合工大通知聚合源。对外 RSS/Atom 或 REST API，是产品化与商业化入口（canonical_url + sources + category + summary 结构）。</p>
+
+    <h3>3.8 知识库 / RAG 问答激活 <span class="sev p2">P2</span></h3>
+    <p>IMA 已同步但没用起来：历史语义检索（"去年保研夏令营什么时候开始的？"）、对话式查询、日报加"相关历史"链接。</p>
+
+    <h3>3.9 可视化 Web 仪表盘 <span class="sev p2">P2</span></h3>
+    <p>轻量仪表盘：栏目覆盖趋势、分类占比、30 天热力图、关键词云——既是运维工具，也是比赛"系统可视化"亮点。</p>
+
+    <h3>3.10 图书馆第 37 栏目确定性修复 <span class="sev p0">P0</span></h3>
+    <p>唯一稳定失败栏目：<code>lib.hfut.edu.cn</code> React SPA 在无头 Edge 始终不挂载（连续两次返回 120KB noscript 兜底页）。优先修：CDP 用 <code>wait_for_function</code> 等 <code>.dbTime</code> 出现再取 HTML；不行则改抓 React 先发的 JSON 接口数据。小修补、补全覆盖盲区。</p>
+
+    <h3>3.11 AI 层成本校准 <span class="sev p2">P2</span></h3>
+    <p>本地 Ollama/规则做"是否值得分析"廉价预判，仅高相关调云端；relevance 打分加"示例+周度抽检"防阈值漂移；本地缓存 embeddings/摘要避免重复调模型。</p>
+
+    <h3>3.12 多校 / 多校区泛化 <span class="sev p2">P2</span></h3>
+    <p>栏目收敛在 <code>CHANNELS</code> 配置，可扩到安徽其他高校——参赛可作"通用高校情报中台"泛化论证（注意商业化报告指出跨校源库是纯人力活，需节奏控制）。</p>
+
+    <h2 id="s4"><span class="num">四</span>外部最佳实践对标（changedetection.io 深挖）</h2>
+    <p>通过联网调研（changedetection.io 官方/社区文档、WebSearch 2026-09-27）整理其能力矩阵，作为可借鉴的技术清单。该开源项目 32.5k★、Apache-2.0，是"通用监控引擎"的标杆——<strong>你的差异化不在重造它，而在"中国高校源库 + 教育语义"垂直层</strong>。</p>
+
+    <h3>4.1 changedetection.io 的 5 种检测模式（可直接借鉴）</h3>
+    <table>
+      <tr><th>模式</th><th>能力</th><th>你可直接借的点</th></tr>
+      <tr><td>文本 diff</td><td>词/行/字符级对比，diff viewer 高亮增删</td><td>3.1 段落级 diff + 人读摘要</td></tr>
+      <tr><td>视觉截图 diff</td><td>Playwright 截图 + 像素比对（pixelmatch）</td><td>对图文通知做视觉变更告警（高价值但成本高，按需）</td></tr>
+      <tr><td>价格/库存监测</td><td>提取 schema.org/OG 元数据 + 阈值触发</td><td>映射为"DDL 倒计时 + 名额阈值"提醒</td></tr>
+      <tr><td>JSON 监测</td><td>JSONPath/jq 解析 API 响应</td><td>对 React/Vue 站直接抓 JSON 接口（见 3.10 图书馆）</td></tr>
+      <tr><td>PDF 监测</td><td>PDF 文本/大小/checksum 变化</td><td>对附件 PDF 做变更检测（呼应 3.6）</td></tr>
+    </table>
+
+    <h3>4.2 其"降噪与智能化"能力（比赛可对标的点）</h3>
+    <ul>
+      <li><strong>元素级监控</strong>：CSS/XPath/JSONPath/jq 选择器只盯正文容器，忽略导航/页脚噪声 → 你的"ignore_junk"思路；</li>
+      <li><strong>Visual Selector</strong>：点哪监控哪 → 可降级为"用户从抓取结果勾选有效条目"覆盖 80% 需求；</li>
+      <li><strong>Browser Steps</strong>：登录/填表/点按钮后再检测 → 你的 WebVPN/登录态采集可借用；</li>
+      <li><strong>AI 变更过滤 + AI 摘要</strong>：用 LiteLLM 接任意模型，写自然语言意图（"仅在价格低于 ¥50 时通知"）过滤噪声，并把 raw diff 改写成"价格由 ¥89.99 降到 ¥67.00" → 你 3.1/3.3 的 LLM 改写可直接对标；</li>
+      <li><strong>85+ 通知渠道</strong>（Apprise）→ 你已有 <code>hfut_notify.py</code> 同款底座，<strong>只差接入主链路</strong>（2.4/3.5）；</li>
+      <li><strong>per-watch 代理 / 条件触发 / 时区调度</strong>：规模化运营的成熟特性，标注为长远演进方向。</li>
+    </ul>
+
+    <h3>4.3 网页监控通用最佳实践（可落地的具体技巧）</h3>
+    <ul>
+      <li><strong>MD5 短路</strong>：抓完先 hash，未变就跳过解析（省 90% 处理）；</li>
+      <li><strong>DOM 降噪管道</strong>：比对前用 AST 级清洗去掉 Tailwind hash 类名、CSRF Token、轮播时间戳——纯字符串/MD5 比对的误报率高达 95%，降噪后个位数；</li>
+      <li><strong>双层检测架构</strong>：快速 HTTP 抓取 + 仅 JS 站走 Playwright，兼顾并发与成本（与你现有四级兜底同源思想）；</li>
+      <li><strong>像素 diff 调参</strong>：pixelmatch threshold 0.1 + 变化像素占比 0.1% 容差，过滤渲染抖动；</li>
+      <li><strong>内容截断</strong>：快照上限 5000 字符，防 DB 无限膨胀（呼应你 2.11 索引限长）；</li>
+      <li><strong>人读 diff</strong>：difflib.unified_diff 生成前后对比，通知带"变化了什么"而非"变了"。</li>
+    </ul>
+    <div class="box good"><strong>借力而非重造</strong>：通用引擎（抓取/调度/diff/通知）changedetection.io 已做得极好且开源。你的护城河是它做不到的<strong>垂直层</strong>——高校栏目源库、教育语义分类、保研/竞赛 DDL 理解、学生个性化订阅。架构上可考虑"自研垂直层 + 可选借 changedetection 做通用底座"，而非从零写监控内核。</div>
+
+    <h2 id="s5"><span class="num">五</span>整合优先级路线图</h2>
+    <p>将第二章（加固）与第三章（扩展）合并排序，按"风险低/收益高/不动大架构"优先。类型：<span class="tag p0">修复</span> 加固已功能、<span class="tag p1">优化</span> 提质、<span class="tag p2">新增</span> 新能力。</p>
+    <table>
+      <tr><th>优先级</th><th>类型</th><th>项</th><th>价值</th><th>工作量</th><th>风险</th></tr>
+      <tr><td><span class="tag p0">P0</span></td><td>修复</td><td>2.1 内容指纹 + safe_load_json，杜绝"全量重推"事故</td><td>系统不出事故（演示底线）</td><td>小</td><td>低</td></tr>
+      <tr><td><span class="tag p0">P0</span></td><td>修复</td><td>3.10 图书馆第 37 栏目 CDP/接口修复</td><td>补全覆盖盲区</td><td>小</td><td>低</td></tr>
+      <tr><td><span class="tag p0">P0</span></td><td>新增</td><td>3.2 语义级去重（两阶段，本地 embedding）</td><td>降噪提准 + 算法亮点</td><td>中</td><td>低</td></tr>
+      <tr><td><span class="tag p0">P0</span></td><td>新增</td><td>3.4 个性化订阅（兴趣标签订阅）</td><td>体验跃升 + 比赛差异化</td><td>中</td><td>低</td></tr>
+      <tr><td><span class="tag p1">P1</span></td><td>修复</td><td>2.3 分类体系三合一（删 categorize_item）</td><td>数据口径一致</td><td>小</td><td>低</td></tr>
+      <tr><td><span class="tag p1">P1</span></td><td>修复</td><td>2.4+3.5 apprise 接入主链路 + 跨账号 failover</td><td>解锁微信/钉钉 + 抗 SMTP 失效</td><td>小</td><td>低</td></tr>
+      <tr><td><span class="tag p1">P1</span></td><td>新增</td><td>2.2+3.1 内容级变更检测（MD5短路+DOM降噪+diff）</td><td>捕捉"更新"，最高新增价值</td><td>中</td><td>中</td></tr>
+      <tr><td><span class="tag p1">P1</span></td><td>新增</td><td>3.3 详情页结构化抽取 + DDL 校正</td><td>情报"说人话" + DDL 倒计时</td><td>中</td><td>中</td></tr>
+      <tr><td><span class="tag p1">P1</span></td><td>优化</td><td>2.5/2.6/2.7 状态 IO 容错 + 缓存加锁 + 拆单体引入 logging</td><td>可维护性/稳定性</td><td>中</td><td>中</td></tr>
+      <tr><td><span class="tag p1">P1</span></td><td>优化</td><td>2.16/2.18 摘要去重 + 每日情报子系统接入流水线</td><td>防重复发信 + 自动化</td><td>中</td><td>中</td></tr>
+      <tr><td><span class="tag p2">P2</span></td><td>优化</td><td>2.8–2.15 硬编码/重复码/索引限长/TLS/转义/死代码清理</td><td>可移植 + 安全 + 整洁</td><td>中</td><td>低</td></tr>
+      <tr><td><span class="tag p2">P2</span></td><td>新增</td><td>3.6/3.7/3.8/3.9 附件OCR / RSS·API / RAG问答 / 仪表盘</td><td>产品化 + 商业化入口</td><td>中–大</td><td>中</td></tr>
+      <tr><td><span class="tag p2">P2</span></td><td>新增</td><td>3.12 多校/多校区泛化</td><td>泛化论证</td><td>大</td><td>中</td></tr>
+    </table>
+    <div class="box warn"><strong>推荐落地顺序（第一阶段，不动大架构、低风险、答辩好讲）</strong>：
+    ① 2.1 防全量重推（最小改动护住演示底线）→ ② 3.10 图书馆修复（小修补盲区）→ ③ 3.2 语义去重（与变更检测共用正文底座，先铺）→ ④ 3.4 个性化订阅（改发送层，收益最直观）→ ⑤ 2.4+3.5 打通 apprise。
+    第二阶段再做 2.2/3.1 内容变更检测与 3.3 结构化抽取（差异化核心），最后才是 P2 的产品化/商业化层。</div>
+
+    <h2 id="s6"><span class="num">六</span>比赛包装建议（源自既有文档，简要）</h2>
+    <ul>
+      <li><strong>定位升维</strong>：从"爬虫脚本"→"面向高校学生的智能情报中台 / 信息差消除平台"。</li>
+      <li><strong>创新点</strong>：① 三级容错抓取（抗 SPA/反爬/证书）；② 通用+专属双解析器（抗站点改版）；③ 语义去重 + 内容变更检测（NLP 亮点）；④ 个性化订阅 + 即时告警（产品亮点）；⑤ 0 Token 纯脚本日报（成本亮点）。</li>
+      <li><strong>数据资产</strong>：已沉淀约 1020 条通知索引 + 30 人真实用户 + 连续每日运行，是最有说服力的"已落地"证据。</li>
+      <li><strong>商业延展</strong>：RSS/API 开放、跨校复制、付费个性化推送（呼应既有《商业化可行性调研报告》）。</li>
+    </ul>
+
+    <h2 id="s7">附录：待清理死代码 / 冗余模块清单</h2>
+    <p class="muted">均经全仓 grep 确认零 import（仅自身引用）或未接入主流程。删除前请先 <code>git stash</code>/备份，并跑 <code>tests/</code> 回归。</p>
+    <table>
+      <tr><th>模块</th><th>行数</th><th>判定</th><th>处置</th></tr>
+      <tr><td><code>scripts/main.py</code></td><td>1174</td><td>遗留旧主入口，已被 orchestrator 取代</td><td>删除</td></tr>
+      <tr><td><code>scripts/qq_group_scraper.py</code></td><td>1405</td><td>与 <code>qq_group_monitor</code> 重叠，零 import</td><td>合并/删除</td></tr>
+      <tr><td><code>scripts/qzone_scraper.py</code></td><td>1249</td><td>与 <code>qzone_monitor</code> 重叠，零 import</td><td>合并/删除</td></tr>
+      <tr><td><code>scripts/wechat_article_scraper.py</code></td><td>1189</td><td>与 <code>wechat_account_monitor</code> 重叠，零 import</td><td>删除</td></tr>
+      <tr><td><code>scripts/wechat_monitor_enhanced.py</code></td><td>241</td><td>仅被已弃用 main.py 引用</td><td>随 main.py 删除</td></tr>
+      <tr><td><code>scripts/notion_manager.py</code></td><td>475</td><td>Notion 已 disable，未接入</td><td>与 IMA 路线二选一</td></tr>
+      <tr><td><code>scripts/data_sync.py</code></td><td>436</td><td>被 test 引用，已被 orchestrator 同步取代</td><td>删除</td></tr>
+      <tr><td><code>scripts/storage_manager.py</code></td><td>594</td><td>三写调度，零 import</td><td>未接入，删除</td></tr>
+      <tr><td><code>scripts/fault_tolerance.py</code></td><td>711</td><td>多级容错设计完整但未挂入主流程</td><td>若不需要则删</td></tr>
+      <tr><td><code>scripts/ocr_extractor.py</code></td><td>937</td><td>仅被 fault_tolerance 引用（而未接入）</td><td>接入 3.6 或删</td></tr>
+      <tr><td><code>scripts/playwright_scraper.py</code></td><td>625</td><td>仅 status 探测 import，未用于采集</td><td>能力模块，按需保留</td></tr>
+      <tr><td><code>scripts/qq_group_collector.py</code></td><td>623</td><td>仅被 fault_tolerance 引用，与 monitor 重叠</td><td>合并/删除</td></tr>
+      <tr><td><code>scripts/wechat_monitor.py</code></td><td>183</td><td>DEPRECATED 但被 ai_secretary 兜底触发</td><td>去兜底或删</td></tr>
+    </table>
+
+    <div class="box"><strong>下一步</strong>：本总报告为方向、优先级与技术要点判断，<strong>未改动任何代码</strong>。若确认启动，建议从 P0 第一项（2.1 防全量重推）入手——它最小改动、直接护住"演示不出事故"的底线，随后可按第五章顺序逐项让我给出落地实现方案与代码。</div>
+
+  </div>
+  <div class="foot">合工大信息巡检系统 · 深度调研总报告 · 2026-09-27 · 由 WorkBuddy（联网工具箱）生成 · 基于项目源码逐文件审阅 + changedetection.io 等外部最佳实践联网调研 · 与《功能扩展与优化调研-2026-09-27.html》互为补充</div>
+</div>
+</body>
+</html>

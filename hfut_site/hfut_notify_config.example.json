@@ -1,0 +1,16 @@
+{
+  "_说明": "复制本文件为 hfut_notify_config.json 后填写真实凭据。该文件含密钥，已在 .gitignore 中排除，切勿提交。",
+  "_渠道写法参考": {
+    "企业微信机器人": "wecombot://<bot_key>",
+    "钉钉": "dingtalk://<APIKEY>/<手机号>",
+    "PushDeer": "pushdeer://<pushkey>",
+    "PushPlus": "pushplus://<token>",
+    "WxPusher": "wxpusher://<appToken>/<uid>",
+    "飞书": "lark://<webhook_key>",
+    "Bark_iOS": "bark://<device_key>",
+    "邮件_QQ邮箱": "mailto://<邮箱>:<授权码>@smtp.qq.com",
+    "ntfy": "ntfy://<topic>"
+  },
+  "enabled": true,
+  "urls": []
+}
