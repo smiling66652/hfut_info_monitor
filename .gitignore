@@ -214,3 +214,5 @@ hfut_site/hfut_notify_config.json
 docs/_raw_20260922/
 # Windows 设备文件事故产生的垃圾文件（Python 把 nul 当路径写出来的残留）
 __nul_device_file_*.txt
+# 语义检索向量缓存（3.4MB 派生数据，可由 scripts/semantic_search.py 重新生成）
+data/.semantic_vector_cache.json

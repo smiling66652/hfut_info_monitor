@@ -55,6 +55,8 @@ PAGE = """<!DOCTYPE html>
         display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
   .score { background: #eaf3fc; color: #3a7bc0; padding: 2px 9px;
         border-radius: 999px; font-size: 12px; }
+  .cos { background: #eaf7f0; color: #2e8b62; padding: 2px 9px;
+        border-radius: 999px; font-size: 12px; }
   .empty { text-align: center; color: #aab8c8; padding: 40px 0; font-size: 14px; }
   .footer { text-align: center; color: #b6c2cf; font-size: 12px; margin-top: 40px; }
 </style>
@@ -62,18 +64,19 @@ PAGE = """<!DOCTYPE html>
 <body>
 <div class="wrap">
   <h1>合工大通知信息 · 语义检索</h1>
-  <div class="sub">BM25 + 本地 LLM 降级链 · 零 API 成本 · 数据来源：本地归档 257 条</div>
+  <div class="sub">BM25 关键词 + 同义词扩展 + 本地向量语义层（qwen3-embedding）· 完全本地运行，零 API 成本 · 归档 257 条</div>
   <div class="searchbar">
-    <input id="q" type="text" placeholder="输入查询，如：保研 / 竞赛报名 / 奖学金"
+    <input id="q" type="text" placeholder="输入查询，如：出国交流机会 / 补助 / 奖学金"
            onkeydown="if(event.key==='Enter')search()">
     <button onclick="search()">搜索</button>
   </div>
   <div class="chips">
-    <span onclick="quick('保研')">保研</span>
+    <span onclick="quick('出国交流机会')">出国交流机会</span>
+    <span onclick="quick('补助')">补助</span>
     <span onclick="quick('竞赛报名')">竞赛报名</span>
     <span onclick="quick('奖学金')">奖学金</span>
-    <span onclick="quick('校运会')">校运会</span>
-    <span onclick="quick('讲座')">讲座</span>
+    <span onclick="quick('保研')">保研</span>
+    <span onclick="quick('学术讲座预告')">学术讲座预告</span>
   </div>
   <div id="meta" class="meta"></div>
   <div id="results"><div class="empty">输入查询词开始检索</div></div>
@@ -94,8 +97,13 @@ async function search(){
     if(!d.hits.length){ box.innerHTML='<div class="empty">无命中结果</div>'; return; }
     box.innerHTML = d.hits.map(h=>
       '<div class="card"><div class="title"><a href="'+h.url+'" target="_blank">'
-      + esc(h.title) + '</a></div><div class="info"><span class="score">相关度 '
-      + h.score + '</span><span>'+esc(h.date)+'</span><span>'+esc(h.source)
+      + esc(h.title) + '</a></div><div class="info">'
+      + (h.cosine!==undefined
+          ? '<span class="score">相关度 '+h.score+'</span>'
+            +'<span class="cos">语义相似 '+h.cosine+'</span>'
+            +'<span>关键词分 '+h.bm25+'</span>'
+          : '<span class="score">相关度 '+h.score+'</span>')
+      +'<span>'+esc(h.date)+'</span><span>'+esc(h.source)
       +'</span></div></div>').join('');
   }catch(e){
     box.innerHTML = '<div class="empty">请求失败：'+e+'</div>';
