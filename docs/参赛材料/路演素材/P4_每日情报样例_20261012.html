@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>每日情报 2026-10-12</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family:"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;
+         background:#eef2f7; color:#1f2937; margin:0; padding:20px 12px; }
+  .container { max-width:720px; margin:0 auto; background:#fff; border-radius:14px;
+               box-shadow:0 6px 24px rgba(15,23,42,.10); overflow:hidden; }
+
+  /* ── 顶端（2026-09-23 改版：浅色简洁）────────────────────────── */
+  .header { background:#f6f9fd; border-left:4px solid #2563eb;
+            padding:22px 26px 20px; color:#0f172a; }
+  .header h1 { margin:0; font-size:22px; font-weight:700; color:#0f172a;
+               letter-spacing:.01em; }
+  .header .sub { margin:6px 0 0; font-size:12.5px; color:#64748b; }
+  .stats { margin-top:16px; display:flex; gap:26px; flex-wrap:wrap; }
+  .stats .st .n { font-size:19px; font-weight:700; color:#1d4ed8; line-height:1.1; }
+  .stats .st .l { font-size:11.5px; color:#64748b; margin-top:2px; }
+
+
+  /* ── DDL 提醒 ─────────────────────────────────── */
+  .ddl-wrap { padding:16px 24px 0; }
+  .ddls { background:#fffbeb; border:1px solid #fde68a; border-left:4px solid #f59e0b;
+          border-radius:0 10px 10px 0; padding:14px 18px 12px; }
+  .ddls-title { margin:0 0 10px; font-size:15px; font-weight:700; color:#b45309; }
+  .ddls ul { margin:0; padding-left:16px; }
+  .ddls li { margin:0 0 12px; font-size:13px; line-height:1.65; }
+  .ddls li:last-child { margin-bottom:2px; }
+  .ddl-deadline { display:inline-block; font-weight:700; color:#b91c1c;
+                  background:#fee2e2; border-radius:5px; padding:1px 7px; margin-right:6px; }
+  .ddl-title { font-weight:600; color:#1f2937; }
+  .ddl-link { display:inline-block; margin-left:6px; font-size:12px; color:#1d4ed8;
+              text-decoration:none; border-bottom:1px dashed #93c5fd; }
+  .ddl-note { color:#6b7280; font-size:12px; margin-top:3px; }
+  .ddl-src { color:#5b6b7b; font-size:11px; margin-top:2px; }
+
+  /* ── 分区 ─────────────────────────────────────── */
+  .section { border-top:1px solid #eef2f7; }
+  details { padding:0 24px; }
+  summary { padding:16px 0; cursor:pointer; font-size:16px; font-weight:600;
+            color:#111827; list-style:none; display:flex; align-items:center;
+            gap:8px; user-select:none; }
+  summary::-webkit-details-marker { display:none; }
+  summary::before { content:"\25B8"; font-size:12px; color:#6366f1;
+                    transition:transform .2s; display:inline-block; }
+  details[open] summary::before { transform:rotate(90deg); }
+  .badge { display:inline-block; font-size:11px; padding:2px 9px; border-radius:999px;
+           font-weight:600; margin-left:auto; }
+  .badge-sci { background:#eef2ff; color:#4338ca; }
+  .badge-comp { background:#eef2ff; color:#3730a3; }
+  .badge-opp { background:#ecfdf5; color:#047857; }
+  .badge-github { background:#fff7ed; color:#c2410c; }
+  .badge-baoyan { background:#fdf2f8; color:#be185d; }
+  .content { padding:0 0 20px; }
+
+  /* ── 条目 ─────────────────────────────────────── */
+  .item { padding:12px 0; border-bottom:1px dashed #eef2f7; }
+  .item:last-child { border-bottom:none; }
+  .item-title { font-size:14px; font-weight:600; color:#111827; margin-bottom:5px;
+                line-height:1.55; }
+  .item-title a { color:#111827; text-decoration:none; }
+  .item-title a:hover { color:#4f46e5; }
+  .item-meta { font-size:12px; color:#64748b; display:flex; align-items:center;
+               gap:8px; flex-wrap:wrap; }
+  .item-meta a { color:#1d4ed8; text-decoration:none; }
+  .item-meta a:hover { text-decoration:underline; }
+  .item-tag { display:inline-block; font-size:11px; padding:1px 7px; border-radius:5px;
+              background:#f3f4f6; color:#4b5563; }
+  .tag-funding { background:#e3f2fd; color:#1565c0; }
+  .tag-scholarship { background:#fff8e1; color:#b45309; }
+  .tag-competition { background:#e8f5e9; color:#2e7d32; }
+  .tag-notice { background:#eef2ff; color:#4338ca; }
+  .tag-academic { background:#f5f3ff; color:#6d28d9; }
+  .tag-career { background:#ecfeff; color:#0e7490; }
+
+  /* ── 卡片 ─────────────────────────────────────── */
+  .card { margin:10px 0; padding:13px 16px; background:#fafbfc; border-radius:9px;
+          border:1px solid #eef2f7; }
+  .card .name { font-weight:700; font-size:14px; color:#111827; }
+  .card .stars { font-size:12px; color:#b45309; margin-left:8px; }
+  .card .title { font-weight:600; font-size:14px; color:#111827; line-height:1.55; }
+  .card .desc { font-size:13px; color:#4b5563; margin-top:5px; line-height:1.68; }
+  .card .url { font-size:12px; margin-top:6px; }
+  .card .url a { color:#1d4ed8; text-decoration:none; }
+  .card .url a:hover { text-decoration:underline; }
+
+  /* ── 赛事日历（带倒计时）────────────────────────
+     需求（2026-09-23 用户原话）：「一天又一天的计时，当 A、B 类赛事还有 3 个月的时候开始提醒」
+     所以每条都显示"还有 N 天"，并按剩余天数分四档换左边框与文字颜色：
+       ≥90 天 → 灰（尚远）  ｜  ≤90 天 → 蓝（进入提醒窗口）
+       ≤30 天 → 琥珀（紧迫）｜  ≤14 天 → 红（临界）                        */
+  .comp { margin:10px 0; padding:12px 14px; background:#fff; border:1px solid #e5e7eb;
+          border-left:3px solid #cbd5e1; border-radius:8px; }
+  .comp.c-lead { border-left-color:#2563eb; }
+  .comp.c-urgent { border-left-color:#f59e0b; background:#fffdf5; }
+  .comp.c-critical { border-left-color:#dc2626; background:#fff5f5; }
+  .comp .top { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+  .comp .name { font-weight:700; font-size:14px; color:#0f172a; }
+  .comp .lvl { font-size:11px; font-weight:700; padding:1px 7px; border-radius:4px; }
+  .comp .lvl-a { background:#eef2ff; color:#3730a3; }
+  .comp .lvl-b { background:#f1f5f9; color:#475569; }
+  .comp .cd { margin-left:auto; font-size:12px; font-weight:700; white-space:nowrap; }
+  .comp .cd-far { color:#64748b; }
+  .comp .cd-lead { color:#1d4ed8; }
+  .comp .cd-urgent { color:#b45309; }
+  .comp .cd-critical { color:#b91c1c; }
+  .comp .meta { font-size:12px; color:#64748b; margin-top:5px; }
+  .comp .note { font-size:12.5px; color:#4b5563; margin-top:5px; line-height:1.65; }
+  /* 准备路线一行速览：用 focus 拼成「补基础 → 刷真题 → 组队模拟 → 冲刺」 */
+  .comp .prep { font-size:12.5px; color:#475569; margin-top:5px; line-height:1.65;
+                background:#f8fafc; border-radius:6px; padding:5px 9px; }
+  .comp .prep b { color:#334155; font-weight:600; margin-right:6px; }
+  .comp .links { margin-top:7px; display:flex; flex-wrap:wrap; gap:12px; font-size:12px; }
+  .comp .links a { color:#1d4ed8; text-decoration:none; }
+  .comp .bar { height:3px; background:#f1f5f9; border-radius:2px; margin-top:9px; overflow:hidden; }
+  .comp .bar i { display:block; height:100%; background:#bfdbfe; }
+  .comp.c-urgent .bar i { background:#fcd34d; }
+  .comp.c-critical .bar i { background:#fca5a5; }
+
+  /* ── 成长机会 ─────────────────────────────────── */
+  .opp { margin:10px 0; padding:12px 14px; background:#fafbfc; border:1px solid #eef2f7;
+         border-radius:8px; }
+  .opp .hd { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+  .opp .name { font-weight:700; font-size:14px; color:#0f172a; }
+  .opp .org { font-size:12px; color:#64748b; }
+  .opp .desc { font-size:13px; color:#4b5563; margin-top:5px; line-height:1.65; }
+  .opp .meta { font-size:12px; color:#64748b; margin-top:7px; display:flex;
+               flex-wrap:wrap; gap:10px; align-items:center; }
+  .opp .t { font-size:11px; padding:1px 7px; border-radius:5px; background:#ecfdf5; color:#047857; }
+  .opp .dl { font-weight:700; color:#b91c1c; }
+  .opp .url a { color:#1d4ed8; text-decoration:none; }
+
+  .empty { padding:4px 0 18px; font-size:13px; color:#5b6b7b; }
+  .footer { padding:16px 24px; background:#f8fafc; font-size:12px;
+            color:#5b6b7b; text-align:center; line-height:1.7; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>📬 每日情报</h1>
+    <p class="sub">2026-10-12 · 合工大官网 · GitHub 趋势 · 保研竞赛 · 赛事日历 · 成长机会 · 官网近 7 天 · 共 37 栏目</p>
+    <div class="stats"><div class="st"><div class="n">16</div><div class="l">官网条目</div></div><div class="st"><div class="n">12</div><div class="l">临近赛事</div></div><div class="st"><div class="n">8</div><div class="l">成长机会</div></div><div class="st"><div class="n">5</div><div class="l">待办 DDL</div></div></div>
+  </div>
+  <div class="ddl-wrap">
+    <div class="ddls">
+      <div class="ddls-title">⏰ 近期 DDL 提醒（5 项）</div>
+      <ul>
+        <li><span class="ddl-deadline">10月15日 12:00 前填报（约 3 天）</span><span class="ddl-title">中南财经政法大学经济学院继续接收 2027 推免生</span><a class="ddl-link" href="https://jjxy.zuel.edu.cn/2026/1009/c2744a440637/page.htm" target="_blank">查看通知 &rarr;</a><div class="ddl-note">推免服务系统填报志愿，10/15 17:00 前发放复试通知；10/18 后系统不再接受新志愿，经管方向可抓紧捡漏</div><div class="ddl-src">来源：中南财经政法大学经济学院</div></li>
+        <li><span class="ddl-deadline">10月18日 23:00 报名通道关闭（约 6 天）</span><span class="ddl-title">研招网推免服务系统（2027 届）</span><a class="ddl-link" href="https://yz.chsi.com.cn/tm/" target="_blank">查看通知 &rarr;</a><div class="ddl-note">3 个平行志愿、每志愿提交后 48 小时不可改；10/20 23:00 确认功能关闭，未落实接收可转当年统考</div><div class="ddl-src">来源：研招网</div></li>
+        <li><span class="ddl-deadline">10月19日 24:00 报名截止（约 7 天）</span><span class="ddl-title">全国大学生数学竞赛（第十六届）</span><a class="ddl-link" href="https://www.cmathc.org.cn/" target="_blank">查看通知 &rarr;</a><div class="ddl-note">B 类赛事，保研综测加分项，错过等一年</div><div class="ddl-src">来源：中国数学会</div></li>
+        <li><span class="ddl-deadline">10月25日 初赛截止（约 13 天）</span><span class="ddl-title">中国国际大学生创新大赛省赛（用户参赛重点项目）</span><a class="ddl-link" href="https://cy.ncss.cn/" target="_blank">查看通知 &rarr;</a><div class="ddl-note">A 类赛事，官网巡检系统 v3.1 参赛项目，临近提交窗口</div><div class="ddl-src">来源：全国大学生创业服务网</div></li>
+        <li><span class="ddl-deadline">10月31日 报名截止（约 19 天）</span><span class="ddl-title">第十一届华为 ICT 大赛（2026-2027 中国赛）</span><a class="ddl-link" href="https://e.huawei.com/cn/talent/ict-academy/#/ict-contest" target="_blank">查看通知 &rarr;</a><div class="ddl-note">实践赛/挑战赛 10-31 截止，创新赛/编程赛 11-30 截止；非计算机专业可打「AI+ICT」创新赛</div><div class="ddl-src">来源：华为人才在线</div></li>
+      </ul>
+    </div>
+  </div>
+  <div class="section">
+    <details open>
+      <summary><span>🏫</span> 合工大官网 <span class="badge badge-sci">16 条</span></summary>
+      <div class="content">
+        <div class="item">
+          <div class="item-title"><a href="http://kyy.hfut.edu.cn/2026/1012/c3310a323718/page.htm" target="_blank">国家重点研发计划「商业航天关键技术攻关与示范应用」重点专项2026年度项目申报指南征求意见</a></div>
+          <div class="item-meta"><span class="item-tag tag-funding">科研基金</span><span>新闻网-教学科研</span><span>2026-10-12</span><a href="http://kyy.hfut.edu.cn/2026/1012/c3310a323718/page.htm" target="_blank">原文 &rarr;</a></div>
+        </div>
+        <div class="item">
+          <div class="item-title"><a href="http://kyy.hfut.edu.cn/2026/1008/c3310a323596/page.htm" target="_blank">基金委发布2026年度专项项目——「能源科学与人工智能深度融合前沿创新」青年专项项目指南</a></div>
+          <div class="item-meta"><span class="item-tag tag-funding">科研基金</span><span>新闻网-教学科研</span><span>2026-10-08</span><a href="http://kyy.hfut.edu.cn/2026/1008/c3310a323596/page.htm" target="_blank">原文 &rarr;</a></div>
+        </div>
+        <div class="item">
+          <div class="item-title"><a href="http://kyy.hfut.edu.cn/2026/1008/c3310a323590/page.htm" target="_blank">基金委发布2026年度深圳人工智能联合基金重大专项项目指南</a></div>
+          <div class="item-meta"><span class="item-tag tag-funding">科研基金</span><span>新闻网-教学科研</span><span>2026-10-08</span><a href="http://kyy.hfut.edu.cn/2026/1008/c3310a323590/page.htm" target="_blank">原文 &rarr;</a></div>
+        </div>
+        <div class="item">
+          <div class="item-title"><a href="https://jwc.hfut.edu.cn/info/1247/6101.htm" target="_blank">关于组织申报2026年中国高校产学研创新基金—海光信息高校智算创新专项的通知</a></div>
+          <div class="item-meta"><span class="item-tag tag-funding">科研基金</span><span>新闻网-教学科研</span><span>2026-10-08</span><a href="https://jwc.hfut.edu.cn/info/1247/6101.htm" target="_blank">原文 &rarr;</a></div>
+        </div>
+        <div class="item">
+          <div class="item-title"><a href="http://kyy.hfut.edu.cn/2026/1010/c3310a323620/page.htm" target="_blank">国家科技重大专项：煤炭重大专项2027年度第二批项目申报指南征求意见</a></div>
+          <div class="item-meta"><span class="item-tag tag-funding">科研基金</span><span>新闻网-教学科研</span><span>2026-10-10</span><a href="http://kyy.hfut.edu.cn/2026/1010/c3310a323620/page.htm" target="_blank">原文 &rarr;</a></div>
+        </div>
+        <div class="item">
+          <div class="item-title"><a href="https://kyy.hfut.edu.cn/2026/1011/c3310a323712/page.htm" target="_blank">2026年度安徽省自然科学基金拟推荐项目公示</a></div>
+          <div class="item-meta"><span class="item-tag tag-funding">科研基金</span><span>科研院-通知公告</span><span>2026-10-11</span><a href="https://kyy.hfut.edu.cn/2026/1011/c3310a323712/page.htm" target="_blank">原文 &rarr;</a></div>
+        </div>
+        <div class="item">
+          <div class="item-title"><a href="https://kyy.hfut.edu.cn/2026/1010/c3310a323709/page.htm" target="_blank">国家科技重大专项：自然资源部发布深地国家科技重大专项2026年度第二批公开项目申报指南</a></div>
+          <div class="item-meta"><span class="item-tag tag-funding">科研基金</span><span>科研院-通知公告</span><span>2026-10-10</span><a href="https://kyy.hfut.edu.cn/2026/1010/c3310a323709/page.htm" target="_blank">原文 &rarr;</a></div>
+        </div>
+        <div class="item">
+          <div class="item-title"><a href="https://kyy.hfut.edu.cn/2026/1010/c3310a323664/page.htm" target="_blank">关于转发「2026年中国高校产学研创新基金－迈瑞专项」的通知</a></div>
+          <div class="item-meta"><span class="item-tag tag-funding">科研基金</span><span>科研院-通知公告</span><span>2026-10-10</span><a href="https://kyy.hfut.edu.cn/2026/1010/c3310a323664/page.htm" target="_blank">原文 &rarr;</a></div>
+        </div>
+        <div class="item">
+          <div class="item-title"><a href="http://tuanwei.hfut.edu.cn/2026/1012/c736a323723/page.htm" target="_blank">关于举办第八届「斛兵杯」新媒体文化节暨新媒体创意产品设计大赛的通知</a></div>
+          <div class="item-meta"><span class="item-tag tag-competition">竞赛</span><span>团委-通知公告</span><span>2026-10-12</span><a href="http://tuanwei.hfut.edu.cn/2026/1012/c736a323723/page.htm" target="_blank">原文 &rarr;</a></div>
+        </div>
+        <div class="item">
+          <div class="item-title"><a href="http://xc.hfut.edu.cn/a4/93/c1955a42131/page.htm" target="_blank">关于举办合肥工业大学宣城校区第十届市场调查与分析大赛的通知</a></div>
+          <div class="item-meta"><span class="item-tag tag-competition">竞赛</span><span>宣城校区-新闻通知</span><span>2026-10-10</span><a href="http://xc.hfut.edu.cn/a4/93/c1955a42131/page.htm" target="_blank">原文 &rarr;</a></div>
+        </div>
+        <div class="item">
+          <div class="item-title"><a href="http://xc.hfut.edu.cn/a4/94/c1955a42132/page.htm" target="_blank">关于举办2026年安徽省高校企业竞争模拟大赛暨宣城校区校内选拔赛的通知</a></div>
+          <div class="item-meta"><span class="item-tag tag-competition">竞赛</span><span>宣城校区-新闻通知</span><span>2026-10-10</span><a href="http://xc.hfut.edu.cn/a4/94/c1955a42132/page.htm" target="_blank">原文 &rarr;</a></div>
+        </div>
+        <div class="item">
+          <div class="item-title"><a href="https://ea.hfut.edu.cn/info/1081/5322.htm" target="_blank">关于评选「台达奖学金」的通知</a></div>
+          <div class="item-meta"><span class="item-tag tag-scholarship">奖学金</span><span>电气学院-学院公告</span><span>2026-10-08</span><a href="https://ea.hfut.edu.cn/info/1081/5322.htm" target="_blank">原文 &rarr;</a></div>
+        </div>
+        <div class="item">
+          <div class="item-title"><a href="https://ea.hfut.edu.cn/info/1081/5321.htm" target="_blank">电气与自动化工程学院一般管理人员招聘公告</a></div>
+          <div class="item-meta"><span class="item-tag tag-career">就业</span><span>电气学院-学院公告</span><span>2026-10-08</span><a href="https://ea.hfut.edu.cn/info/1081/5321.htm" target="_blank">原文 &rarr;</a></div>
+        </div>
+        <div class="item">
+          <div class="item-title"><a href="https://ci.hfut.edu.cn/info/1063/16614.htm" target="_blank">第二届全国人工智能逻辑大会暨CAAI人工智能逻辑专业委员会学术年会会议通知</a></div>
+          <div class="item-meta"><span class="item-tag tag-academic">学术</span><span>计算机学院-通知公告</span><span>2026-10-30</span><a href="https://ci.hfut.edu.cn/info/1063/16614.htm" target="_blank">原文 &rarr;</a></div>
+        </div>
+        <div class="item">
+          <div class="item-title"><a href="https://hfgydx.bysjy.com.cn/detail/news?id=1840826&amp;type_id=19520" target="_blank">关于上线就业与职业发展学习平台的通知</a></div>
+          <div class="item-meta"><span class="item-tag tag-career">就业</span><span>就业网-招聘信息</span><span>2026-10-10</span><a href="https://hfgydx.bysjy.com.cn/detail/news?id=1840826&amp;type_id=19520" target="_blank">原文 &rarr;</a></div>
+        </div>
+        <div class="item">
+          <div class="item-title"><a href="http://jxjy.hfut.edu.cn/info/1047/4231.htm" target="_blank">关于未按期毕业学生不及格课程补考、毕业设计（论文）补安排的通知</a></div>
+          <div class="item-meta"><span class="item-tag tag-notice">通知</span><span>继续教育-通知公告</span><span>2026-10-09</span><a href="http://jxjy.hfut.edu.cn/info/1047/4231.htm" target="_blank">原文 &rarr;</a></div>
+        </div>
+      </div>
+    </details>
+  </div>
+  <div class="section">
+    <details open>
+      <summary><span>🏆</span> 赛事日历（A/B 类） <span class="badge badge-comp">12 项临近</span></summary>
+      <div class="content">
+        <div class="comp c-critical">
+          <div class="top"><span class="name">全国大学生数学竞赛</span><span class="lvl lvl-b">B 类</span><span class="cd cd-critical">还有 7 天</span></div>
+          <div class="meta">报名截止：<b>2026-10-19</b> · 中国数学会</div>
+          <div class="note">第十八届：各赛区/高校截止时间不同（参考：西安邮电大学 9/26、西北工业大学 10/8、浙江农林大学 10/14）；中国数学会规定 2026-10-19 前由赛区统一报名</div>
+          <div class="links"><a href="https://www.cmathc.org.cn/" target="_blank">官方主页 &rarr;</a></div>
+<div class="bar"><i style="width:92%"></i></div>
+        </div>
+        <div class="comp c-critical">
+          <div class="top"><span class="name">中国国际大学生创新大赛（原「互联网+」大学生创新创业大赛）</span><span class="lvl lvl-a">A 类</span><span class="cd cd-critical">还有 13 天</span></div>
+          <div class="meta">初赛结束：<b>2026-10-25</b> · 教育部等12部门联合主办；2026年起与江苏省人民政府联合主办，南京大学与南京市人民政府承办</div>
+          <div class="note">2026年：报名系统8月10日开放，9月25日12时截止（教育部通知，见 https://news.k618.cn/dj/202607/t20260731_20053546.html）</div>
+          <div class="prep"><b>准备路线</b>组队 + 选题 + 一页纸计 → 打磨 BP 与路演 → 校赛/省赛路演实战 → 国赛冲刺</div>
+          <div class="links"><a href="https://cy.ncss.cn/" target="_blank">官方主页 &rarr;</a><a href="https://cy.ncss.cn/" target="_blank">中国国际大学生创新大赛（原“互联网+ &rarr;</a><a href="https://cy.ncss.cn/problem" target="_blank">中国国际大学生创新大赛·常见问题（赛 &rarr;</a><a href="https://www.tiaozhanbei.net/" target="_blank">“挑战杯”全国大学生课外学术科技作品 &rarr;</a><a href="https://2025.tiaozhanbei.net/d49" target="_blank">第十九届“挑战杯”课外学术科技作品竞 &rarr;</a><a href="https://www.xiaohongshu.com/explore/6a9bdd3f0000000011037c8c" target="_blank">小红书笔记 &rarr;</a></div>
+<div class="bar"><i style="width:85%"></i></div>
+        </div>
+        <div class="comp c-urgent">
+          <div class="top"><span class="name">全国大学生智能汽车竞赛</span><span class="lvl lvl-a">A 类</span><span class="cd cd-urgent">还有 20 天</span></div>
+          <div class="meta">报名截止：<b>2026-11-01</b> · 教育部高等教育司指导；中国自动化学会（2020年起）主办</div>
+          <div class="note">2026年第二十一届：室内赛道（含缩微）报名截止 2026-07-01；室外赛道报名截止 2026-11-01；各校校内报名更早（如集美大学截止6/25、云南大学截止7/1）</div>
+          <div class="links"><a href="http://www.smartcarrace.com/" target="_blank">官方主页 &rarr;</a></div>
+<div class="bar"><i style="width:77%"></i></div>
+        </div>
+        <div class="comp c-urgent">
+          <div class="top"><span class="name">国家级大学生创新创业训练计划（大创项目）</span><span class="lvl lvl-b">未确认</span><span class="cd cd-urgent">还有 20 天</span></div>
+          <div class="meta">报名开始：<b>2026-11-01</b> · 教育部（国家级）；安徽省教育厅（省级）；合肥工业大学教务处归口管理（校级）</div>
+          <div class="note">合工大校内：每年 11—12 月集中申报立项（2026 年度通知于 2025-11-05 发布，见 https://jwc.hfut.edu.cn/info/1248/5347.htm ）；学生联系导师、选题、组队并提交申报书</div>
+          <div class="links"><a href="https://jwc.hfut.edu.cn/info/1248/5347.htm" target="_blank">官方主页 &rarr;</a></div>
+<div class="bar"><i style="width:77%"></i></div>
+        </div>
+        <div class="comp c-lead">
+          <div class="top"><span class="name">全国大学生嵌入式芯片与系统设计竞赛</span><span class="lvl lvl-b">B 类</span><span class="cd cd-lead">还有 41 天</span></div>
+          <div class="meta">决赛结束：<b>2026-11-22</b> · 中国电子教育学会主办（指导单位：中国电子学会）；承办：东南大学、南京江北新区管理委员会</div>
+          <div class="note">第九届（2026）芯片应用赛道：2026 年 2 月正式启动，报名截止 2026-04-20（官网 www.socchina.net 注册报名并提交选题及设计方案）；FPGA 创新设计赛道：2026-07-06 启动，报名 2026-07-</div>
+          <div class="links"><a href="http://www.socchina.net/" target="_blank">官方主页 &rarr;</a></div>
+<div class="bar"><i style="width:54%"></i></div>
+        </div>
+        <div class="comp c-lead">
+          <div class="top"><span class="name">「外研社·国才杯」「理解当代中国」全国大学生外语能力大赛</span><span class="lvl lvl-b">B 类</span><span class="cd cd-lead">还有 49 天</span></div>
+          <div class="meta">初赛结束：<b>2026-11-30</b> · 北京外国语大学主办；外语教学与研究出版社（外研社）承办</div>
+          <div class="note">2026年各赛项报名截止不同：「四新」专项赛 2026-09-10；演讲、短视频赛项 2026-09-20；综合能力、笔译赛项 2026-10-04（报名网址 https://ucc.fltrp.com ）</div>
+          <div class="links"><a href="https://ucc.fltrp.com/" target="_blank">官方主页 &rarr;</a></div>
+<div class="bar"><i style="width:45%"></i></div>
+        </div>
+        <div class="comp c-lead">
+          <div class="top"><span class="name">中国大学生机械工程创新创意大赛</span><span class="lvl lvl-b">未确认</span><span class="cd cd-lead">还有 49 天</span></div>
+          <div class="meta">决赛结束：<b>2026-11-30</b> · 中国机械工程学会</div>
+          <div class="note">2026年：大赛 3 月启动，各赛项报名时间不一（参考：机械产品数字化设计赛报名截止 2026-07-01；智能装备创新设计赛报名 6 月；游乐设施创意设计赛 4—7 月；各校校内报名更早，如青岛黄海学院 2026-05-10、西北农林科技</div>
+          <div class="prep"><b>准备路线</b>选赛项 + 补建模与仿真能力 → 建数字样机 + 仿真验算 → 补齐作品材料 + 校内选拔 → 区域赛/决赛（含限时现场实操</div>
+          <div class="links"><a href="https://www.cmes.org/" target="_blank">官方主页 &rarr;</a><a href="https://www.cmes.org/" target="_blank">主办单位官网：中国机械工程学会（赛事 &rarr;</a><a href="https://www.cmes.org/cmes/upload/2026/03-18/09-47-4800081058154528.pdf" target="_blank">2026 年大赛实施方案（PDF，含 &rarr;</a><a href="https://cmee.upc.edu.cn/_upload/article/files/77/e3/8e5b629b4f438ad4039ebb0013df/506893e0-f59f-424d-9bcb-a882bb947e75.pdf" target="_blank">大赛安排表（3 赛道 19 赛项清单 &rarr;</a><a href="https://me.aiit.edu.cn/info/186245?number=science_competition&amp;parent=student_pannouncement" target="_blank">赛事基本情况介绍（所需知识储备、软件 &rarr;</a><a href="https://www.xiaohongshu.com/search_result?keyword=%E6%9C%BA%E6%A2%B0%E5%B7%A5%E7%A8%8B%E5%88%9B%E6%96%B0%E5%88%9B%E6%84%8F%E5%A4%A7%E8%B5%9B&amp;source=web_explore_feed" target="_blank">小红书笔记 &rarr;</a></div>
+<div class="bar"><i style="width:45%"></i></div>
+        </div>
+        <div class="comp c-lead">
+          <div class="top"><span class="name">华为ICT大赛</span><span class="lvl lvl-b">未确认</span><span class="cd cd-lead">还有 49 天</span></div>
+          <div class="meta">报名截止：<b>2026-11-30</b> · 华为技术有限公司</div>
+          <div class="note">第十一届（2026-2027）：各赛道报名起止不同 —— 实践赛、挑战赛 2026-08-31 至 10-31；创新赛、编程赛 2026-08-31 至 11-30；精英赛至 11-15；CANN 算子赛 2026-07-24 至 10-2</div>
+          <div class="prep"><b>准备路线</b>选赛道 + 报名 + HCI → 上机实验 + 刷真题 → 团队协同训练 + 全真模拟 → 冲刺（只做真题与错题）</div>
+          <div class="links"><a href="https://e.huawei.com/cn/talent/ict-academy/#/ict-contest" target="_blank">官方主页 &rarr;</a><a href="https://e.huawei.com/cn/talent/ict-academy/" target="_blank">华为ICT大赛官方平台（ICT学院： &rarr;</a><a href="https://e.huawei.com/cn/talent/news" target="_blank">华为人才在线·大赛通知与赛事动态（官 &rarr;</a><a href="https://e.huawei.com/cn/talent/news/#/details?consultationId=5226" target="_blank">第十届华为ICT大赛中国赛通知（官方 &rarr;</a><a href="https://developer.huaweicloud.com/" target="_blank">华为云开发者官网（在线课程、云实验、 &rarr;</a><a href="https://www.xiaohongshu.com/search_result?keyword=%E5%8D%8E%E4%B8%BAICT%E5%A4%A7%E8%B5%9B%20%E5%A4%87%E8%B5%9B&amp;source=web_explore_feed" target="_blank">小红书笔记 &rarr;</a></div>
+<div class="bar"><i style="width:45%"></i></div>
+        </div>
+        <div class="comp c-lead">
+          <div class="top"><span class="name">全国周培源大学生力学竞赛</span><span class="lvl lvl-b">B 类</span><span class="cd cd-lead">还有 50 天</span></div>
+          <div class="meta">报名开始：<b>2026-12-01</b> · 教育部委托；教育部高等学校力学基础课程教学指导分委员会、中国力学学会、周培源基金会联合主办；《力学与实践》编委会与中国力学学会教育工作委员会承办</div>
+          <div class="note">第十六届（2027）报名截止预计为 2027 年 3 月 31 日（参考第十五届为 3 月 31 日截止）；赛事双数年 12 月启动报名筹备</div>
+          <div class="links"><a href="http://zpy.cstam.org.cn/" target="_blank">官方主页 &rarr;</a></div>
+<div class="bar"><i style="width:44%"></i></div>
+        </div>
+        <div class="comp c-lead">
+          <div class="top"><span class="name">「挑战杯」全国大学生课外学术科技作品竞赛（大挑）</span><span class="lvl lvl-a">A 类</span><span class="cd cd-lead">还有 64 天</span></div>
+          <div class="meta">报名截止：<b>2026-12-15</b> · 共青团中央、中国科协、教育部、中国社会科学院、全国学联、承办地政府</div>
+          <div class="note">2027年第十九届：各校院级初赛集中 2026 年 9—12 月，作品报送截止多在 2026-12-15 前后（以本校通知为准）</div>
+          <div class="prep"><b>准备路线</b>组队 + 选题 + 一页纸计 → 打磨 BP 与路演 → 校赛/省赛路演实战 → 国赛冲刺</div>
+          <div class="links"><a href="http://www.tiaozhanbei.net/" target="_blank">官方主页 &rarr;</a><a href="https://cy.ncss.cn/" target="_blank">中国国际大学生创新大赛（原“互联网+ &rarr;</a><a href="https://cy.ncss.cn/problem" target="_blank">中国国际大学生创新大赛·常见问题（赛 &rarr;</a><a href="https://www.tiaozhanbei.net/" target="_blank">“挑战杯”全国大学生课外学术科技作品 &rarr;</a><a href="https://2025.tiaozhanbei.net/d49" target="_blank">第十九届“挑战杯”课外学术科技作品竞 &rarr;</a><a href="https://www.xiaohongshu.com/explore/6a9bdd3f0000000011037c8c" target="_blank">小红书笔记 &rarr;</a></div>
+<div class="bar"><i style="width:28%"></i></div>
+        </div>
+        <div class="comp c-lead">
+          <div class="top"><span class="name">中国大学生工程实践与创新能力大赛（原全国大学生工程训练综合技能竞赛）</span><span class="lvl lvl-a">A 类</span><span class="cd cd-lead">还有 80 天</span></div>
+          <div class="meta">初赛结束：<b>2026-12-31</b> · 教育部工程训练教学指导委员会</div>
+          <div class="note">2027年第十届预报名：各校截止时间不一（参考：燕山大学 2026-06-21、江西理工大学 2026-07-22），以本校通知为准</div>
+          <div class="links"><a href="http://www.gcxl.edu.cn/" target="_blank">官方主页 &rarr;</a></div>
+<div class="bar"><i style="width:11%"></i></div>
+        </div>
+        <div class="comp c-lead">
+          <div class="top"><span class="name">ACM-ICPC 国际大学生程序设计竞赛（含 CCPC）</span><span class="lvl lvl-b">B 类</span><span class="cd cd-lead">还有 80 天</span></div>
+          <div class="meta">决赛结束：<b>2026-12-31</b> · ICPC Foundation；中国区由 ICPC Asia East Continent（网络预选赛由北京大学承办）</div>
+          <div class="note">2026 年网络预选赛两场：第一场报名/缴费截止 2026-08-26 23:59:59，第二场截止 2026-09-01 23:59:59（报名 https://icpc.pintia.cn ，120 元/队/场）</div>
+          <div class="links"><a href="https://icpc.global/" target="_blank">官方主页 &rarr;</a></div>
+<div class="bar"><i style="width:11%"></i></div>
+        </div>
+      </div>
+    </details>
+  </div>
+  <div class="section">
+    <details open>
+      <summary><span>🌱</span> 成长机会 <span class="badge badge-opp">8 条</span></summary>
+      <div class="content">
+        <div class="opp">
+          <div class="hd"><span class="name">第十一届华为 ICT 大赛（2026-2027 中国赛）</span><span class="org">华为技术有限公司</span></div>
+          <div class="desc">已纳入全国普通高校大学生竞赛排行榜，实践赛/挑战赛 10-31 截止，机械+电气背景可打「AI+ICT」创新赛</div>
+          <div class="meta"><span class="t">大厂活动</span><span>全国</span><span>截止 <span class="dl">2026-10-31</span></span><span class="url"><a href="https://e.huawei.com/cn/talent/ict-academy/#/ict-contest" target="_blank">查看详情 &rarr;</a></span></div>
+        </div>
+        <div class="opp">
+          <div class="hd"><span class="name">阿里云高校计划「云工开物」学生算力券（300 元/年）</span><span class="org">阿里云</span></div>
+          <div class="desc">完成学生认证即领 300 元无门槛算力券（有效期 1 年），做项目/参赛/课程设计的零成本算力资源</div>
+          <div class="meta"><span class="t">企业培养计划</span><span>全国</span><span class="url"><a href="https://university.aliyun.com/" target="_blank">查看详情 &rarr;</a></span></div>
+        </div>
+        <div class="opp">
+          <div class="hd"><span class="name">阿里云天池大赛（常年开放）</span><span class="org">阿里云</span></div>
+          <div class="desc">数据/AI 类竞赛全年滚动开放，计算机方向刷项目、拿名次最稳定的入口</div>
+          <div class="meta"><span class="t">大厂活动</span><span>全国</span><span class="url"><a href="https://tianchi.aliyun.com/competition" target="_blank">查看详情 &rarr;</a></span></div>
+        </div>
+        <div class="opp">
+          <div class="hd"><span class="name">字节跳动 2027 校园招聘</span><span class="org">字节跳动</span></div>
+          <div class="desc">面向 2026-09~2027-08 毕业生，今年大幅扩招 AI 全栈/AI Agent 岗位，全年两次投递窗口</div>
+          <div class="meta"><span class="t">招聘</span><span>全国</span><span>截止 <span class="dl">2027-05-31</span></span><span class="url"><a href="https://jobs.bytedance.com/campus" target="_blank">查看详情 &rarr;</a></span></div>
+        </div>
+        <div class="opp">
+          <div class="hd"><span class="name">腾讯 2027 校园招聘</span><span class="org">腾讯</span></div>
+          <div class="desc">新增 AI 全栈/Agent 开发岗位，多数岗位 8-10 月完成面试与录用，现为最后一波窗口</div>
+          <div class="meta"><span class="t">招聘</span><span>全国</span><span class="url"><a href="https://join.qq.com/" target="_blank">查看详情 &rarr;</a></span></div>
+        </div>
+        <div class="opp">
+          <div class="hd"><span class="name">教育部 2027 届高校毕业生「金秋启航」校园招聘月</span><span class="org">教育部</span></div>
+          <div class="desc">全国性秋招专项活动总入口，可据此跟踪后续各地各校落地场次</div>
+          <div class="meta"><span class="t">招聘</span><span>全国</span><span class="url"><a href="https://www.moe.gov.cn/jyb_xwfb/gzdt_gzdt/s5987/202609/t20260918_1451304.html" target="_blank">查看详情 &rarr;</a></span></div>
+        </div>
+        <div class="opp">
+          <div class="hd"><span class="name">2027 届高校毕业生全国网络联合招聘</span><span class="org">教育部学生服务与素质发展中心</span></div>
+          <div class="desc">24365 平台全国网络联合招聘专场，岗位信息全静态可直接检索</div>
+          <div class="meta"><span class="t">招聘</span><span>全国</span><span class="url"><a href="https://www.ncss.cn/student/jobfair/fairdetails.html?fairId=7fUt9qv2RwqKhHb6rrcQgL" target="_blank">查看详情 &rarr;</a></span></div>
+        </div>
+        <div class="opp">
+          <div class="hd"><span class="name">2025—2026 学年国家奖学金评审</span><span class="org">全国学生资助管理中心 / 各高校学工部</span></div>
+          <div class="desc">本专科生国奖 10000 元/年，各校 10 月进入校级评审公示期，保研综测硬通货</div>
+          <div class="meta"><span class="t">奖学金</span><span>全国</span><span class="url"><a href="https://www.xszz.edu.cn/" target="_blank">查看详情 &rarr;</a></span></div>
+        </div>
+      </div>
+    </details>
+  </div>
+  <div class="section">
+    <details>
+      <summary><span>🎓</span> 保研与竞赛 <span class="badge badge-baoyan">5 条</span></summary>
+      <div class="content">
+        <div class="card">
+          <div class="title">研招网推免服务系统进入最后窗口（2027 届）</div>
+          <div class="desc">10/18 23:00 报名通道关闭、10/20 23:00 确认功能关闭；3 个平行志愿、每志愿提交后 48 小时不可改；10/20 前未落实接收，推免资格失效但可转当年统考（10/15-24 正式报名兜底）</div>
+          <div class="url"><a href="https://yz.chsi.com.cn/tm/" target="_blank">yz.chsi.com.cn/tm</a></div>
+        </div>
+        <div class="card">
+          <div class="title">中南财经政法大学经济学院继续通过推免服务系统接收 2027 推免生</div>
+          <div class="desc">10/15 12:00 前在推免服务系统填报志愿，10/15 17:00 前发放复试通知并组织复试；已拿到口头 offer 的同学需尽快在系统完成确认</div>
+          <div class="url"><a href="https://jjxy.zuel.edu.cn/2026/1009/c2744a440637/page.htm" target="_blank">jjxy.zuel.edu.cn/2026/1009/c2744a440637/page.htm</a></div>
+        </div>
+        <div class="card">
+          <div class="title">合肥工业大学电气与自动化工程学院 2027 年硕士推免与考研本校宣讲会</div>
+          <div class="desc">面向本校考生的推免政策宣讲，电气方向保研可直接对标的院内信息口，建议关注后续复试安排</div>
+          <div class="url"><a href="https://ea.hfut.edu.cn/info/1081/5268.htm" target="_blank">ea.hfut.edu.cn/info/1081/5268.htm</a></div>
+        </div>
+        <div class="card">
+          <div class="title">合肥工业大学 2027 年硕士研究生招生简章发布</div>
+          <div class="desc">2026-09-30 发布，含推免接收安排、招生目录与考试大纲；电气/计算机方向保研可对照目录锁定目标专业</div>
+          <div class="url"><a href="https://yjszs.hfut.edu.cn/2026/0930/c13534a323534/page.htm" target="_blank">yjszs.hfut.edu.cn/2026/0930/c13534a323534/page.htm</a></div>
+        </div>
+        <div class="card">
+          <div class="title">2027 届保研收官复盘：三个信号提示 2028 届提前动手</div>
+          <div class="desc">时间线整体前移（好营 3-8 月抢完）、优营效力分三档（铁 offer/优先档/需复试，同校不同院效力不同）、计算机与 AI 方向最卷；现大三的同学寒假即需备材料</div>
+          <div class="url"><a href="https://m.toutiao.com/article/7694155518520230443" target="_blank">m.toutiao.com/article/7694155518520230443</a></div>
+        </div>
+      </div>
+    </details>
+  </div>
+  <div class="section">
+    <details>
+      <summary><span>⭐</span> GitHub 趋势 <span class="badge badge-github">AI Agent / LLM / RAG · 5 个</span></summary>
+      <div class="content">
+        <div class="card">
+          <div><span class="name">morluto/rea</span><span class="stars">⭐ 133,362（今日 +45,495）</span></div>
+          <div class="desc">用 AI Agent 做逆向工程，从 App 行为一路分析到原生二进制——安全研究与二进制分析工作流全面 Agent 化的样板，今日 Trending 断层第一</div>
+          <div class="url"><a href="https://github.com/morluto/rea" target="_blank">github.com/morluto/rea</a></div>
+        </div>
+        <div class="card">
+          <div><span class="name">mksglu/context-mode</span><span class="stars">⭐ 26,837（今日 +485）</span></div>
+          <div class="desc">AI 编程 Agent 的上下文窗口优化器：沙箱化工具输出（削减 98%）、持久化会话记忆、经 MCP+hooks 在 17 个平台强制路由——长任务 Agent 的省钱方案</div>
+          <div class="url"><a href="https://github.com/mksglu/context-mode" target="_blank">github.com/mksglu/context-mode</a></div>
+        </div>
+        <div class="card">
+          <div><span class="name">cathrynlavery/diagram-design</span><span class="stars">⭐ 51,734（今日 +2,100）</span></div>
+          <div class="desc">让 Claude Code/Codex/Copilot 等生成编辑级图表：44 种图型、自包含 HTML+SVG，替代 Mermaid 的粗糙输出——技术文档与汇报利器</div>
+          <div class="url"><a href="https://github.com/cathrynlavery/diagram-design" target="_blank">github.com/cathrynlavery/diagram-design</a></div>
+        </div>
+        <div class="card">
+          <div><span class="name">open-webui/open-webui</span><span class="stars">⭐ 154,459（今日 +142）</span></div>
+          <div class="desc">自托管统一 LLM 交互界面，兼容 Ollama/OpenAI API 等——本地部署大模型的默认前端，插件生态活跃</div>
+          <div class="url"><a href="https://github.com/open-webui/open-webui" target="_blank">github.com/open-webui/open-webui</a></div>
+        </div>
+        <div class="card">
+          <div><span class="name">lyogavin/airllm</span><span class="stars">⭐ 37,028（今日 +886）</span></div>
+          <div class="desc">分层推理让 4GB 显存单卡跑 70B 模型——没有高端 GPU 时本地跑大模型的经典省内存方案</div>
+          <div class="url"><a href="https://github.com/lyogavin/airllm" target="_blank">github.com/lyogavin/airllm</a></div>
+        </div>
+      </div>
+    </details>
+  </div>
+  <div class="footer">
+    由合工大每日情报系统自动生成 · 2026-10-12<br>
+    每条信息均附原文链接，点标题即可直达 · 赛事倒计时以邮件日期为基准
+  </div>
+</div>
+</body>
+</html>

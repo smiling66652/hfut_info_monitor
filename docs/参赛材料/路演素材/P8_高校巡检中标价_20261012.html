@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><title>高校巡检舆情服务中标价</title>
+<style>
+  * { box-sizing:border-box; }
+  body { margin:0; background:#ffffff;
+          font-family:"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;
+          color:#1f2937; padding:34px 38px 26px; width:1240px; }
+  .hd { border-left:5px solid #2563eb; padding:2px 0 2px 16px; margin-bottom:20px; }
+  .hd h1 { margin:0; font-size:29px; font-weight:700; color:#0f172a; letter-spacing:.01em; }
+  .hd p  { margin:7px 0 0; font-size:14.5px; color:#64748b; line-height:1.6; }
+
+  .kpi { display:flex; gap:14px; margin:20px 0 22px; }
+  .kpi .k { flex:1; background:#f6f9fd; border:1px solid #e3ebf5; border-radius:10px;
+             padding:13px 16px; }
+  .kpi .k .n { font-size:27px; font-weight:700; color:#1d4ed8; line-height:1.15; }
+  .kpi .k .n small { font-size:15px; font-weight:600; color:#475569; margin-left:2px; }
+  .kpi .k .l { font-size:13px; color:#64748b; margin-top:3px; }
+
+  .chart { border-top:1px solid #eef2f7; padding-top:18px; }
+  .row { display:flex; align-items:center; margin-bottom:11px; }
+  .lab { width:250px; flex:0 0 250px; font-size:15px; font-weight:600; color:#111827;
+          text-align:right; padding-right:14px; line-height:1.35; }
+  .lab .note { display:block; font-size:11.5px; font-weight:400; color:#94a3b8;
+                margin-top:1px; }
+  .track { flex:1; position:relative; height:30px; display:flex; align-items:center; }
+  .fill { height:21px; border-radius:0 5px 5px 0;
+           background:linear-gradient(90deg,#93c5fd,#2563eb); }
+  /* 行按金额升序排列，所以"最大的一笔"是最后一行 —— 用 nth-last-child 取倒数第 1、2 名做高亮，
+     别用 first-child / nth-child(2)（那会正好把最小的两笔标成重点）。
+     注意：这段 CSS 在 f-string 里，大括号要写成两个。 */
+  .row:nth-last-child(1) .fill { background:linear-gradient(90deg,#fcd34d,#f59e0b); }
+  .row:nth-last-child(2) .fill { background:linear-gradient(90deg,#fdba74,#ea580c); }
+  .val { font-size:14.5px; font-weight:700; color:#1d4ed8; margin-left:11px;
+          white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .val .per { font-size:12px; font-weight:600; color:#64748b; }
+  .axis { margin-left:250px; margin-top:2px; border-top:1px dashed #dbe3ee; padding-top:5px;
+           font-size:11.5px; color:#94a3b8; display:flex; justify-content:space-between; }
+
+  .ft { margin-top:20px; padding-top:14px; border-top:1px solid #eef2f7;
+         font-size:12.5px; color:#64748b; line-height:1.85; }
+  .ft b { color:#b45309; font-weight:600; }
+  .src { color:#94a3b8; font-size:11.5px; margin-top:6px; }
+</style></head>
+<body>
+  <div class="hd">
+    <h1>B 端真实预算：高校「舆情 + 网站巡检」已中标项目（2026 年）</h1>
+    <p>不是市场规模测算，是<b>已经在公开招标中成交的金额</b>。采购内容明确包含
+       "校园新媒体、网站信息校验""错别字敏感词检查"——与本项目能力范围高度重合。</p>
+  </div>
+
+  <div class="kpi">
+    <div class="k"><div class="n">10<small> 条</small></div><div class="l">已核实中标样本数</div></div>
+    <div class="k"><div class="n">¥2.4<small>–12.75 万/年</small></div>
+      <div class="l">单校年化预算区间</div></div>
+    <div class="k"><div class="n">¥6.71<small> 万</small></div>
+      <div class="l">样本均值</div></div>
+    <div class="k"><div class="n">5.3<small>×</small></div>
+      <div class="l">最高 ÷ 最低客单价倍数</div></div>
+  </div>
+
+  <div class="chart"><div class="row"><div class="lab">宜昌科技职院</div><div class="track"><div class="fill" style="width:2.2%"></div><div class="val">¥24,000</div></div></div><div class="row"><div class="lab">辽宁建筑职业学院</div><div class="track"><div class="fill" style="width:24.3%"></div><div class="val">¥36,000</div></div></div><div class="row"><div class="lab">佛山职业技术学院</div><div class="track"><div class="fill" style="width:27.8%"></div><div class="val">¥38,200</div></div></div><div class="row"><div class="lab">桂林学院</div><div class="track"><div class="fill" style="width:37.6%"></div><div class="val">¥45,000</div></div></div><div class="row"><div class="lab">凯里学院</div><div class="track"><div class="fill" style="width:37.6%"></div><div class="val">¥45,000</div></div></div><div class="row"><div class="lab">广东药科大学</div><div class="track"><div class="fill" style="width:63.9%"></div><div class="val">¥69,800</div></div></div><div class="row"><div class="lab">西南科技大学</div><div class="track"><div class="fill" style="width:76.8%"></div><div class="val">¥86,600<span class="per">/年</span></div></div></div><div class="row"><div class="lab">河南工学院</div><div class="track"><div class="fill" style="width:84.9%"></div><div class="val">¥99,000</div></div></div><div class="row"><div class="lab">云南国土资源职业学院<span class="note">一次采购 3 年</span></div><div class="track"><div class="fill" style="width:85.5%"></div><div class="val">¥100,000<span class="per">/年</span></div></div></div><div class="row"><div class="lab">德州学院</div><div class="track"><div class="fill" style="width:100.0%"></div><div class="val">¥127,500</div></div></div></div>
+  <div class="axis"><span>¥24,000</span><span>条长按对数标度绘制（线性标度下最低项会压成一条线）</span>
+    <span>¥127,500</span></div>
+
+  <div class="ft">
+    <b>为什么这条线成立：</b>标 "／年" 的两项为年度预算；云南国土资源职业学院为一次采购 3 年。
+    该价位远高于 C 端订阅（¥99–199/年），但招标要求独立法人资格、第三方审计财报与社保信用记录，
+    <b>在校学生身份无法直接投标</b> —— 故本项目将其定位为 2–3 年后的目标，而非当前路径。
+    <div class="src">数据来源：docs/商业化可行性调研报告-2026-09-17.html「B 端补充」一节原文所载 10 条中标记录，
+      本图由 make_p8_bid_price.py 从该文件正则解析生成，未做任何估算或补值。</div>
+  </div>
+</body></html>
